@@ -260,7 +260,9 @@
     <issueManagement/>
     <ciManagement/>
     <scm>
-        <developerConnection>scm:git:git://github.com/smcmill2/jpgm</developerConnection>
+        <connection>scm:git:git@github.com:smcmill2/jpgm.git</connection>
+        <url>scm:git:git@github.com:smcmill2/jpgm.git</url>
+        <developerConnection>scm:git:git@github.com/smcmill2/jpgm.git</developerConnection>
     </scm>
 
     <repositories>
