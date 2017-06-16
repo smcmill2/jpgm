@@ -67,19 +67,22 @@ class DiscreteFactorTest {
   }
 
   @Test void testNormalize() {
-    Factor result = discreteFactor.normalize(null);
-    Assertions.assertEquals(null, result);
+    discreteFactor.normalize(true);
+
+    double actualValueSum = Arrays.stream(discreteFactor.getValues()).sum();
+
+    Assertions.assertEquals(1.0, actualValueSum);
   }
 
   @Test void testReduce() {
     Factor result = discreteFactor
-        .reduce(new String[]{"null"}, null);
+        .reduce(new String[]{"null"}, false);
     Assertions.assertEquals(null, result);
   }
 
   @Test void testMarginalize() {
     Factor result = discreteFactor
-        .marginalize(new String[]{"null"}, null);
+        .marginalize(new String[]{"null"}, false);
     Assertions.assertEquals(null, result);
   }
 }

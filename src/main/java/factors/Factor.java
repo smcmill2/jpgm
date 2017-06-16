@@ -18,30 +18,30 @@ public interface Factor {
   /**
    * Normalize the values of the factor such that they sum to 1
    *
-   * @param dst the destination to put the normalized factor. If it is null
-   *            then perform the operation in place and return a copy.
+   * @param inPlace whether to normalize in place or return a new factor object
+   *                that has been normalized.
    * @return the normalized dst factor or a normalized copy.
    */
-  Factor normalize(Factor dst);
+  Factor normalize(boolean inPlace);
 
   /**
    * Reduce the factor by the specified variables, removing them from the scope.
    *
    * @param variables the array of variables to remove from the scope
-   * @param dst the destination to put the new factor in. If it is null
-   *            then perform the operation in place and return a copy.
+   * @param inPlace whether to reduce in place or return a new factor object
+   *                that has been reduced.
    * @return the reduced dst factor or a copy.
    */
-  Factor reduce(String[] variables, Factor dst);
+  Factor reduce(String[] variables, boolean inPlace);
 
   /**
    * Marginalize the factor with respect to the specified variables
    *
    * @param variables the array of variables to marginalize the factor with
    *                  with respect to.
-   * @param dst the destination to put the new factor in. If it is null
-   *            then perform the operation in place and return a copy.
+   * @param inPlace whether to marginalize in place or return a new factor object
+   *                that has been marginalized.
    * @return the marginalized factor dst or a copy.
    */
-  Factor marginalize(String[] variables, Factor dst);
+  Factor marginalize(String[] variables, boolean inPlace);
 }

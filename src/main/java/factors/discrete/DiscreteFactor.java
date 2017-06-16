@@ -4,7 +4,6 @@ import factors.Factor;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -28,8 +27,8 @@ public class DiscreteFactor implements Factor {
     if (variables.length != cardinality.length) {
       throw new RuntimeException("variables and cardinality must have same size.");
     }
-    this.variables = variables.clone();
-    this.cardinality = cardinality.clone();
+    this.variables = Arrays.copyOf(variables, variables.length);
+    this.cardinality = Arrays.copyOf(cardinality, cardinality.length);
 
     this.assignments = new Object2ObjectOpenHashMap<>();
     IntStream.range(0, this.variables.length)
@@ -45,11 +44,20 @@ public class DiscreteFactor implements Factor {
           "of size %d. Instead received array of size %d.",
               this.variables.length * this.cardinality.length, values.length));
     }
-    this.values = values.clone();
+    this.values = Arrays.copyOf(values, values.length);
+  }
+
+  public Factor copy() {
+    return new DiscreteFactor(this.getScope(), this.getCardinality(),
+        this.getValues());
   }
 
   @Override public String[] getScope() {
-    return this.variables.clone();
+    return Arrays.copyOf(this.variables, this.variables.length);
+  }
+
+  public int[] getCardinality() {
+    return Arrays.copyOf(this.cardinality, this.cardinality.length);
   }
 
   public String[] getAssignment(String variable) {
@@ -60,15 +68,29 @@ public class DiscreteFactor implements Factor {
     return this.assignments.get(this.variables[index]);
   }
 
-  @Override public Factor normalize(Factor dst) {
+  public double[] getValues() {
+    return Arrays.copyOf(this.values, this.values.length);
+  }
+
+  @Override public Factor normalize(boolean inPlace) {
+    DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
+
+    // TODO replace with a stream?
+    double sum = Arrays.stream(result.getValues()).sum();
+    double[] normalizedValues = Arrays.stream(result.getValues())
+        .map(v -> v / sum)
+        .toArray();
+
+    result.values = Arrays.copyOf(normalizedValues, normalizedValues.length);
+
+    return result;
+  }
+
+  @Override public Factor reduce(String[] variables, boolean inPlace) {
     return null;
   }
 
-  @Override public Factor reduce(String[] variables, Factor dst) {
-    return null;
-  }
-
-  @Override public Factor marginalize(String[] variables, Factor dst) {
+  @Override public Factor marginalize(String[] variables, boolean inPlace) {
     return null;
   }
 }
