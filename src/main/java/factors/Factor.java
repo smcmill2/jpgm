@@ -1,5 +1,9 @@
 package factors;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
+
 /**
  * Interface for a factor
  *
@@ -27,12 +31,12 @@ public interface Factor {
   /**
    * Reduce the factor by the specified variables, removing them from the scope.
    *
-   * @param variables the array of variables to remove from the scope
+   * @param variables the list of variable, assignment pairs to reduce to
    * @param inPlace whether to reduce in place or return a new factor object
    *                that has been reduced.
    * @return the reduced dst factor or a copy.
    */
-  Factor reduce(String[] variables, boolean inPlace);
+  Factor reduce(List<Pair<String, Integer>> variables, boolean inPlace);
 
   /**
    * Marginalize the factor with respect to the specified variables

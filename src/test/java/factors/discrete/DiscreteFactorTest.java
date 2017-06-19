@@ -1,11 +1,14 @@
 package factors.discrete;
 
 import factors.Factor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Test class for DiscreteFactor
@@ -75,9 +78,13 @@ class DiscreteFactorTest {
   }
 
   @Test void testReduce() {
-    Factor result = discreteFactor
-        .reduce(new String[]{"null"}, false);
-    Assertions.assertEquals(null, result);
+    double[] iReduction = new double[]{0.252, 0.224, 0.0056, 0.06, 0.036, 0.024};
+    List<Pair<String, Integer>> reduceList = new ArrayList<>();
+    reduceList.add(Pair.of("I", 0));
+
+    discreteFactor.reduce(reduceList, true);
+
+    Assertions.assertArrayEquals(iReduction, discreteFactor.getValues());
   }
 
   @Test void testMarginalize() {
