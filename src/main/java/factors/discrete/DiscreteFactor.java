@@ -1,15 +1,19 @@
 package factors.discrete;
 
 import factors.Factor;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -28,8 +32,11 @@ public class DiscreteFactor implements Factor {
   private Object2ObjectOpenHashMap<String, String[]> assignments;
   private int[] cardinality;
   private double[] values;
+  private int size;
 
-  private Object2ObjectOpenHashMap<String, Int2ObjectOpenHashMap<int[]>> indices;
+  private Object2IntOpenHashMap<String> varIdx;
+  private Object2IntOpenHashMap<String> offsetVal;
+  private Object2ObjectOpenHashMap<String, Int2ObjectOpenHashMap<IntArrayList>> indices;
 
   public DiscreteFactor(String[] variables, int[] cardinality, double[] values) {
     this.setVariables(variables);
@@ -44,6 +51,12 @@ public class DiscreteFactor implements Factor {
 
   public void setVariables(String[] variables) {
     this.variables = variables.clone();
+    this.varIdx = new Object2IntOpenHashMap<>(this.variables.length);
+
+    int i = 0;
+    for(String variable : this.variables) {
+      this.varIdx.put(variable, i++);
+    }
   }
 
   @Override public String[] getScope() {
@@ -55,8 +68,19 @@ public class DiscreteFactor implements Factor {
       throw new RuntimeException("variables and cardinality must have same size.");
     }
     this.cardinality = cardinality.clone();
+    this.size = Arrays.stream(this.cardinality)
+        .reduce(1, (a, b) -> a * b);
 
     this.setAssignments();
+
+    this.offsetVal = new Object2IntOpenHashMap<>();
+    for(int v = 0;v < this.variables.length;++v) {
+      int offset = 1;
+      for(int c = v + 1;c < this.variables.length;++c) {
+        offset *= this.cardinality[c];
+      }
+      this.offsetVal.put(this.variables[v], offset);
+    }
   }
 
   public int[] getCardinality() {
@@ -89,12 +113,25 @@ public class DiscreteFactor implements Factor {
               this.variables.length * this.cardinality.length, values.length));
     }
 
+    this.values = values.clone();
+
     this.indices = new Object2ObjectOpenHashMap<>();
     for(int v = 0;v < this.variables.length;++v) {
-      this.indices.put(this.variables[v], new Int2ObjectOpenHashMap<>());
+      String variable = this.variables[v];
+      this.indices.put(variable, new Int2ObjectOpenHashMap<>());
+      IntStream.range(0, this.cardinality[v])
+          .forEach(c -> this.indices.get(variable)
+              .put(c, new IntArrayList()));
     }
 
-    this.values = values.clone();
+    for(int i = 0;i < this.values.length;++i) {
+      for(int v = 0;v < this.variables.length;++v) {
+        String variable = this.variables[v];
+        Int2ObjectOpenHashMap<IntArrayList> idxVal = this.indices.get(variable);
+        int offsetVal = this.offsetVal.getInt(variable);
+        idxVal.get((i / offsetVal) % this.cardinality[v]).add(i);
+      }
+    }
   }
 
   public double[] getValues() {
@@ -114,24 +151,34 @@ public class DiscreteFactor implements Factor {
     return result;
   }
 
-  @Override public Factor reduce(List<Pair<String, Integer>> variables, boolean inPlace) {
+  @Override public Factor reduce(List<Pair<String, Integer>> variables,
+      boolean inPlace) {
     IntArrayList reductionVarIdxs = new IntArrayList();
-    //IntArrayList reductionIdxs = new IntArrayList();
-    int[] reductionIdxs = new int[]{6, 7, 8, 9, 10, 11};
+    IntOpenHashSet reductionIdxs = new IntOpenHashSet();
 
     IntStream.range(0, this.variables.length)
             .forEach(v -> reductionVarIdxs.add(v));
 
-    ObjectOpenHashSet<String> scope = new ObjectOpenHashSet<>();
-    Arrays.stream(this.variables)
-            .forEach(v -> scope.add(v));
-
     for(Pair<String, Integer> varAss : variables) {
       String variable = varAss.getLeft();
       int assignment = varAss.getRight();
-      if(!scope.contains(variable)) {
+
+      if(!this.varIdx.containsKey(variable)) {
         throw new RuntimeException(String.format("Variable %s not in scope\n",
                 variable));
+      } else {
+        reductionVarIdxs.rem(this.varIdx.getInt(variable));
+        IntArrayList assIdx = this.indices.get(variable).get(assignment);
+        if(assIdx == null) {
+          throw new RuntimeException(String.format("Variable: %s has no " +
+                  "assignment: %d\n", variable, assignment));
+        } else {
+          if (reductionIdxs.isEmpty()) {
+            reductionIdxs.addAll(assIdx);
+          } else {
+            reductionIdxs.retainAll(assIdx);
+          }
+        }
       }
     }
 
@@ -143,7 +190,9 @@ public class DiscreteFactor implements Factor {
             .map(i -> this.cardinality[i])
             .toArray();
 
-    double[] newValues = Arrays.stream(reductionIdxs)
+    int[] sortedReducedIdxs = reductionIdxs.toIntArray();
+    Arrays.sort(sortedReducedIdxs);
+    double[] newValues = Arrays.stream(sortedReducedIdxs)
             .mapToDouble(i -> this.values[i])
             .toArray();
 
@@ -160,6 +209,53 @@ public class DiscreteFactor implements Factor {
   }
 
   @Override public Factor marginalize(String[] variables, boolean inPlace) {
-    return null;
+    ObjectArrayList<String> newScope = new ObjectArrayList<>();
+    newScope.addAll(Arrays.stream(this.variables)
+        .collect(Collectors.toCollection(ArrayList::new)));
+    IntArrayList newCardinality = new IntArrayList();
+    newCardinality.addAll(Arrays.stream(this.cardinality)
+        .boxed()
+        .collect(Collectors.toList()));
+
+    for(String variable : variables) {
+      if (!newScope.contains(variable)) {
+        throw new RuntimeException(String.format("Variable %s not in scope or"
+                + "already removed during marginalization\n", variable));
+      }
+      int idx = newScope.indexOf(variable);
+      newScope.remove(idx);
+      newCardinality.removeInt(idx);
+    }
+
+    if(inPlace) {
+      this.setVariables(Arrays.stream(newScope.toArray())
+          .toArray(String[]::new));
+      this.setCardinality(newCardinality.toIntArray());
+    }
+
+    DoubleArrayList marginalizedValues = new DoubleArrayList();
+    for(int i = 0;i < this.size;++i) {
+      IntOpenHashSet idxToSum = new IntOpenHashSet();
+      for(int v = 0;v < this.variables.length;++v) {
+        String variable = this.variables[v];
+        int offset = this.offsetVal.getInt(variable);
+        int assIdx = (i / offset) % this.cardinality[v];
+        IntArrayList assignments = this.indices.get(variable).get(assIdx);
+
+        if (idxToSum.isEmpty()) {
+          idxToSum.addAll(assignments);
+        } else {
+          idxToSum.retainAll(assignments);
+        }
+      }
+
+      marginalizedValues.add(idxToSum.stream()
+          .mapToDouble(index -> this.values[index])
+          .sum());
+    }
+
+    this.setValues(marginalizedValues.toDoubleArray());
+
+    return this;
   }
 }

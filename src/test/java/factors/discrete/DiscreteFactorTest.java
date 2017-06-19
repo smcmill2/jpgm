@@ -18,12 +18,13 @@ import java.util.List;
  * @author Sean McMillan
  */
 class DiscreteFactorTest {
+  private final double threshold = 10e-8;
   String[] variables = new String[]{"I", "D", "G"};
   int[] cardinality = new int[]{2, 2, 3};
   double[] values = new double[]{
       0.126, 0.168, 0.126,
       0.009, 0.045, 0.126,
-      0.252, 0.224, 0.0056,
+      0.252, 0.0224, 0.0056,
       0.06, 0.036, 0.024
   };
 
@@ -74,22 +75,54 @@ class DiscreteFactorTest {
 
     double actualValueSum = Arrays.stream(discreteFactor.getValues()).sum();
 
-    Assertions.assertEquals(1.0, actualValueSum);
+    Assertions.assertEquals(1.0, actualValueSum, threshold);
   }
 
   @Test void testReduce() {
-    double[] iReduction = new double[]{0.252, 0.224, 0.0056, 0.06, 0.036, 0.024};
+    double[] iReduction = new double[]{0.252, 0.0224, 0.0056, 0.06, 0.036, 0.024};
     List<Pair<String, Integer>> reduceList = new ArrayList<>();
-    reduceList.add(Pair.of("I", 0));
+    reduceList.add(Pair.of("I", 1));
 
     discreteFactor.reduce(reduceList, true);
 
-    Assertions.assertArrayEquals(iReduction, discreteFactor.getValues());
+    Assertions.assertArrayEquals(new String[]{"D", "G"}, discreteFactor.getScope());
+    Assertions.assertArrayEquals(new int[]{2, 3}, discreteFactor.getCardinality());
+    Assertions.assertArrayEquals(iReduction, discreteFactor.getValues(), threshold);
+  }
+
+  @Test void testMultipleReduction() {
+    double[] dgReduction = new double[]{0.126, 0.024};
+    List<Pair<String, Integer>> reduceList = new ArrayList<>();
+    reduceList.add(Pair.of("D", 1));
+    reduceList.add(Pair.of("G", 2));
+
+    discreteFactor.reduce(reduceList, true);
+
+    Assertions.assertArrayEquals(new String[]{"I"}, discreteFactor.getScope());
+    Assertions.assertArrayEquals(new int[]{2}, discreteFactor.getCardinality());
+    Assertions.assertArrayEquals(dgReduction, discreteFactor.getValues(), threshold);
   }
 
   @Test void testMarginalize() {
-    Factor result = discreteFactor
-        .marginalize(new String[]{"null"}, false);
-    Assertions.assertEquals(null, result);
+    double[] g_marginalized = new double[]{0.42, 0.18, 0.28, 0.12};
+
+    discreteFactor.marginalize(new String[]{"G"}, true);
+
+    Assertions.assertArrayEquals(new String[]{"I", "D"}, discreteFactor.getScope());
+    Assertions.assertArrayEquals(new int[]{2, 2}, discreteFactor.getCardinality());
+    Assertions.assertArrayEquals(g_marginalized, discreteFactor.getValues(), threshold);
+  }
+
+  /**
+   * TODO parameterize test
+   */
+  @Test void testMultipleMarginalized() {
+    double[] gd_marginalized = new double[]{0.60, 0.40};
+
+    discreteFactor.marginalize(new String[]{"G", "D"}, true);
+
+    Assertions.assertArrayEquals(new String[]{"I"}, discreteFactor.getScope());
+    Assertions.assertArrayEquals(new int[]{2}, discreteFactor.getCardinality());
+    Assertions.assertArrayEquals(gd_marginalized, discreteFactor.getValues(), threshold);
   }
 }

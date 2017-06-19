@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/smcmill2/jpgm.svg?branch=master)](https://travis-ci.org/smcmill2/jpgm)
+[![Build Status](https://travis-ci.org/smcmill2/jpgm.svg?branch=master)](https://travis-ci.org/smcmill2/jpgm) [![Coverage Status](https://coveralls.io/repos/github/smcmill2/jpgm/badge.svg?branch=master)](https://coveralls.io/github/smcmill2/jpgm?branch=master)
 # jpgm
 A Java library for Probabilistic Graphical Models
 

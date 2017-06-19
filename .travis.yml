@@ -14,3 +14,6 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+
+after_success:
+  - mvn clean test jacoco:report coveralls:report
