@@ -8,6 +8,9 @@ cache:
   directories:
     - "$HOME/.cache"
 
+webhooks:
+  - ${env.JPGM_GITTER_WEBHOOK}
+
 deploy:
   provider: script
   script: "cp .travis.settings.xml $HOME/.m2/settings.xml && mvn deploy"
