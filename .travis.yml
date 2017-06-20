@@ -8,8 +8,10 @@ cache:
   directories:
     - "$HOME/.cache"
 
-webhooks:
-  - $JPGM_GITTER_WEBHOOK
+notifications:
+  webhooks:
+    urls:
+      - "$JPGM_GITTER_WEBHOOK_URL"
 
 deploy:
   provider: script
