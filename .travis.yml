@@ -9,7 +9,7 @@ cache:
     - "$HOME/.cache"
 
 webhooks:
-  - ${env.JPGM_GITTER_WEBHOOK}
+  - $JPGM_GITTER_WEBHOOK
 
 deploy:
   provider: script
