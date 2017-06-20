@@ -12,6 +12,7 @@ import java.util.List;
  * @author Sean McMillan
  */
 public interface Factor {
+  double threshold = 10e-8;
   /**
    * Return the scope of the factor
    *
