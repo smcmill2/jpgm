@@ -1,21 +1,19 @@
 package factors.discrete;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.*;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Ints;
 import factors.Factor;
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static util.ListOps.zip;
+import static util.Misc.joinPair;
 
 /**
  * Implementation of a discrete factor. This implementation keeps track of the
@@ -29,15 +27,13 @@ import java.util.stream.IntStream;
  * @author Sean McMillan
  */
 public class DiscreteFactor implements Factor {
-  private ObjectArrayList<String> variables;
-  private Object2ObjectOpenHashMap<String, String[]> assignments;
-  private int[] cardinality;
+  private List<String> variables;
+  private List<Integer> cardinality;
   private double[] values;
   private int size;
 
-  private Object2IntOpenHashMap<String> varIdx;
-  private Int2IntOpenHashMap indexOffset;
-  private Object2ObjectOpenHashMap<String, Int2ObjectOpenHashMap<IntArrayList>> indices;
+  private ListMultimap<String, Integer> assignmentToIdx;
+  private Map<String, Integer> rangeSize;
 
   public DiscreteFactor(String[] variables, int[] cardinality, double[] values) {
     this.setVariables(variables);
@@ -51,9 +47,7 @@ public class DiscreteFactor implements Factor {
   }
 
   private void setVariables(String[] variables) {
-    this.variables = new ObjectArrayList<>();
-    Arrays.stream(variables)
-        .forEach(v -> this.variables.add(v));
+    this.variables = Lists.newArrayList(variables);
   }
 
   @Override public String[] getScope() {
@@ -61,217 +55,164 @@ public class DiscreteFactor implements Factor {
   }
 
   private void setCardinality(int[] cardinality) {
-    if (this.variables.size() != cardinality.length) {
-      throw new RuntimeException("variables and cardinality must have same size.");
-    }
-    this.cardinality = cardinality.clone();
+    Preconditions.checkArgument(this.variables.size() == cardinality.length,
+        "variables and cardinality must have the same size.");
 
-    this.setAssignments();
-    this.createIndices();
+    this.cardinality = Ints.asList(cardinality);
+    this.rangeSize = this.getRangeSize(this.variables, this.cardinality);
+    this.size = this.rangeSize.get(this.variables.get(0)) * this.cardinality.get(0);
+    this.assignmentToIdx = this.createAssignments(this.variables,
+        this.cardinality,
+        this.rangeSize,
+        this.size);
   }
 
   public int[] getCardinality() {
-    return this.cardinality.clone();
+    return Ints.toArray(this.cardinality);
   }
 
-  private void setAssignments() {
-    this.assignments = new Object2ObjectOpenHashMap<>();
-    IntStream.range(0, this.variables.size())
-        .forEach(i -> this.assignments.put(this.variables.get(i),
-            IntStream.range(0, this.cardinality[i])
-                .mapToObj(Integer::toString)
-                .toArray(String[]::new)));
-  }
+  private ListMultimap<String, Integer> createAssignments(List<String> variables,
+      List<Integer> cardinality, Map<String, Integer> rangeSize, int size) {
+    ListMultimap<String, Integer> assignmentToIdx = ArrayListMultimap.create();
 
-  private void createIndices() {
-    this.varIdx = new Object2IntOpenHashMap<>(this.variables.size());
-    this.size = Arrays.stream(this.cardinality)
-        .reduce(1, (a, b) -> a * b);
+    for(int i = 0;i < size;++i) {
+      for (Pair<String, Integer> varCardPair : zip(variables, cardinality)) {
+        String variable = varCardPair.getLeft();
+        Integer card = varCardPair.getRight();
+        int assignment = (i / rangeSize.get(variable)) % card;
 
-    int i = 0;
-    for(String variable : this.variables) {
-      this.varIdx.put(variable, i++);
-    }
-
-    this.indexOffset = getOffsets(this.cardinality);
-  }
-
-  private Int2IntOpenHashMap getOffsets(int[] cardinality) {
-    Int2IntOpenHashMap offsets = new Int2IntOpenHashMap();
-
-    for(int i = 0;i < cardinality.length;++i) {
-      int offset = 1;
-      for(int c = i + 1;c < cardinality.length;++c) {
-        offset *= cardinality[c];
+        assignmentToIdx.put(joinPair(variable, assignment, "="), i);
       }
-      offsets.put(i, offset);
     }
 
-    return offsets;
-  }
-
-  public String[] getAssignment(String variable) {
-    return this.assignments.get(variable);
-  }
-
-  public String[] getAssignment(int index) {
-    return this.assignments.get(this.variables.get(index));
+    return assignmentToIdx;
   }
 
   private void setValues(double[] values) {
-    if (values.length != this.size) {
-      throw new RuntimeException(
+    Preconditions.checkArgument(values.length == this.size,
           String.format("Incorrect size of values variables. Expecting array " +
           "of size %d. Instead received array of size %d.",
               this.size, values.length));
-    }
+    this.values = Arrays.copyOf(values, values.length);
+  }
 
-    this.values = values.clone();
+  private HashMap<String, Integer> getRangeSize(List<String> variables,
+      List<Integer> cardinality) {
+    HashMap<String, Integer> rangeSize = new HashMap<>();
+    AtomicInteger prod = new AtomicInteger(1);
+    List<Integer> ranges = Lists.reverse(Lists.reverse(cardinality).stream()
+        .mapToInt(c -> prod.getAndUpdate(p -> c * p))
+        .boxed()
+        .collect(Collectors.toList()));
 
-    this.indices = new Object2ObjectOpenHashMap<>();
-    for(int v = 0;v < this.variables.size();++v) {
-      String variable = this.variables.get(v);
-      this.indices.put(variable, new Int2ObjectOpenHashMap<>());
-      IntStream.range(0, this.cardinality[v])
-          .forEach(c -> this.indices.get(variable)
-              .put(c, new IntArrayList()));
-    }
+    IntStream.range(0, variables.size())
+        .forEach(i -> rangeSize.put(this.variables.get(i), ranges.get(i)));
 
-    for(int i = 0;i < this.values.length;++i) {
-      for(int v = 0;v < this.variables.size();++v) {
-        String variable = this.variables.get(v);
-        int vIdx = this.varIdx.getInt(variable);
-        int offsetVal = this.indexOffset.get(vIdx);
-        Int2ObjectOpenHashMap<IntArrayList> idxVal = this.indices.get(variable);
-
-        idxVal.get((i / offsetVal) % this.cardinality[v]).add(i);
-      }
-    }
+    return rangeSize;
   }
 
   public double[] getValues() {
-    return this.values.clone();
+    return Arrays.copyOf(this.values, this.values.length);
   }
 
   @Override public Factor normalize(boolean inPlace) {
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
 
     double sum = Arrays.stream(result.getValues()).sum();
-    double[] normalizedValues = Arrays.stream(result.getValues())
-        .map(v -> v / sum)
-        .toArray();
-
-    result.setValues(normalizedValues);
+    result.setValues(Doubles.asList(this.values).stream()
+        .mapToDouble(v -> v / sum)
+        .toArray());
 
     return result;
   }
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
-    IntArrayList reductionVarIdxs = new IntArrayList();
-    IntOpenHashSet reductionIdxs = new IntOpenHashSet();
-
-    IntStream.range(0, this.variables.size())
-            .forEach(reductionVarIdxs::add);
-
+    HashSet<String> rVars = new HashSet<>();
+    HashSet<Integer> rVarIdxs = new HashSet<>();
+    HashSet reducedIdxs = new HashSet();
     for(Pair<String, Integer> varAss : variables) {
       String variable = varAss.getLeft();
-      int assignment = varAss.getRight();
+      String assignment = joinPair(varAss, "=");
+      int vIdx = this.variables.indexOf(variable);
 
-      if(!this.varIdx.containsKey(variable)) {
-        throw new RuntimeException(String.format("Variable %s not in scope\n",
-                variable));
+      rVars.add(variable);
+      rVarIdxs.add(vIdx);
+      List<Integer> assignedIdxs = this.assignmentToIdx.get(assignment);
+      if(reducedIdxs.isEmpty()) {
+        reducedIdxs.addAll(assignedIdxs);
       } else {
-        reductionVarIdxs.rem(this.varIdx.getInt(variable));
-        IntArrayList assIdx = this.indices.get(variable).get(assignment);
-        if(assIdx == null) {
-          throw new RuntimeException(String.format("Variable: %s has no " +
-                  "assignment: %d\n", variable, assignment));
-        } else {
-          if (reductionIdxs.isEmpty()) {
-            reductionIdxs.addAll(assIdx);
-          } else {
-            reductionIdxs.retainAll(assIdx);
-          }
-        }
+        reducedIdxs.retainAll(Sets.intersection(reducedIdxs,
+            Sets.newHashSet(assignedIdxs)));
       }
     }
 
     String[] newScope = this.variables.stream()
-        .filter(v -> reductionVarIdxs.contains(this.varIdx.getInt(v)))
+        .filter(v -> !rVars.contains(v))
         .toArray(String[]::new);
 
-    int[] newCardinality = Arrays.stream(reductionVarIdxs.toIntArray())
-            .map(i -> this.cardinality[i])
-            .toArray();
+    int[] newCardinality = Arrays.asList(newScope).stream()
+        .mapToInt(v -> this.cardinality.get(this.variables.indexOf(v)))
+        .toArray();
 
-    int[] sortedReducedIdxs = reductionIdxs.toIntArray();
-    Arrays.sort(sortedReducedIdxs);
-    double[] newValues = Arrays.stream(sortedReducedIdxs)
-            .mapToDouble(i -> this.values[i])
-            .toArray();
+    double[] newValues = reducedIdxs.stream()
+        .sorted()
+        .mapToDouble(i -> this.values[(int) i])
+        .toArray();
 
-    if(inPlace) {
-      this.setVariables(newScope);
-      this.setCardinality(newCardinality);
-      this.setValues(newValues);
-    }
+    DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
+    result.setVariables(newScope);
+    result.setCardinality(newCardinality);
+    result.setValues(newValues);
 
-    return inPlace ? this :
-            new DiscreteFactor(newScope, newCardinality, newValues);
+    return result;
   }
 
   @Override public Factor marginalize(String[] variables, boolean inPlace) {
-    ObjectArrayList<String> newScope = new ObjectArrayList<>();
-    newScope.addAll(this.variables);
-    IntArrayList newCardinality = new IntArrayList();
-    newCardinality.addAll(Arrays.stream(this.cardinality)
+    HashSet<String> mVars = Sets.newHashSet(variables);
+    List<String> newScope = this.variables.stream()
+        .filter(v -> !mVars.contains(v))
+        .collect(Collectors.toList());
+
+    List<Integer> newCardinality = newScope.stream()
+        .mapToInt(v -> this.cardinality.get(this.variables.indexOf(v)))
         .boxed()
-        .collect(Collectors.toList()));
+        .collect(Collectors.toList());
 
-    for(String variable : variables) {
-      if (!newScope.contains(variable)) {
-        throw new RuntimeException(String.format("Variable %s not in scope or"
-                + "already removed during marginalization\n", variable));
-      }
-      int idx = newScope.indexOf(variable);
-      newScope.remove(idx);
-      newCardinality.removeInt(idx);
-    }
+    HashMap<String, Integer> newRangeSizes =
+        this.getRangeSize(newScope, newCardinality);
 
-    if(inPlace) {
-      this.setVariables(Arrays.stream(newScope.toArray())
-          .toArray(String[]::new));
-      this.setCardinality(newCardinality.toIntArray());
-    }
+    int newSize = newCardinality.stream()
+        .reduce(1, (a, b) -> a * b);
 
-    Int2IntOpenHashMap newIdxOffset = this.getOffsets(newCardinality.toIntArray());
+    double[] newValues = new double[newSize];
+    ListMultimap<String, Integer> newAtoI =
+        this.createAssignments(newScope, newCardinality, newRangeSizes, newSize);
 
-    DoubleArrayList marginalizedValues = new DoubleArrayList();
-    for(int i = 0;i < this.size;++i) {
-      IntOpenHashSet idxToSum = new IntOpenHashSet();
-      for(int v = 0;v < this.variables.size();++v) {
-        String variable = this.variables.get(v);
-        int vIdx = this.varIdx.getInt(variable);
-        int offset = newIdxOffset.get(vIdx);
-        int assIdx = (i / offset) % this.cardinality[v];
+    TreeMultimap<Integer, String> invertedMap = Multimaps.invertFrom(newAtoI,
+        TreeMultimap.create());
 
-        IntArrayList assignments = this.indices.get(variable).get(assIdx);
-
-        if (idxToSum.isEmpty()) {
-          idxToSum.addAll(assignments);
+    for(int i = 0;i < newSize;++i) {
+      Set<Integer> oldIdxs = new HashSet<>();
+      for(String assignment : invertedMap.get(i)) {
+        List<Integer> assignedIdxs = this.assignmentToIdx.get(assignment);
+        if(oldIdxs.isEmpty()) {
+          oldIdxs.addAll(assignedIdxs);
         } else {
-          idxToSum.retainAll(assignments);
+          oldIdxs.retainAll(Sets.intersection(oldIdxs,
+              Sets.newHashSet(assignedIdxs)));
         }
       }
-
-      marginalizedValues.add(idxToSum.stream()
-          .mapToDouble(index -> this.values[index])
-          .sum());
+      newValues[i] = oldIdxs.stream()
+          .mapToDouble(idx -> this.values[idx])
+          .sum();
     }
 
-    this.setValues(marginalizedValues.toDoubleArray());
+    DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
+    result.setVariables(newScope.stream().toArray(String[]::new));
+    result.setCardinality(Ints.toArray(newCardinality));
+    result.setValues(newValues);
 
-    return this;
+    return result;
   }
 }
