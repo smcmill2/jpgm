@@ -30,6 +30,10 @@ public class JointProbabilityDistribution extends DiscreteFactor {
     }
   }
 
+  public double[] getValues() {
+    return Arrays.copyOf(this.values, this.values.length);
+  }
+
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
     Factor f = super.reduce(variables, inPlace);
