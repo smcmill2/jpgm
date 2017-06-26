@@ -39,7 +39,7 @@ class JointProbabilityDistributionTest {
   }
 
   @Test void testCopy() {
-    DiscreteFactor result = (DiscreteFactor)jpd.copy();
+    JointProbabilityDistribution result = (JointProbabilityDistribution) jpd.copy();
 
     Assertions.assertArrayEquals(result.getScope(), jpd.getScope());
     Assertions.assertArrayEquals(result.getCardinality(), jpd.getCardinality());

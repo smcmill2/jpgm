@@ -161,7 +161,7 @@ public class DiscreteFactor implements Factor {
         .filter(v -> !rVars.contains(v))
         .collect(Collectors.toList());
 
-    List<Integer> newCardinality = Arrays.asList(newScope).stream()
+    List<Integer> newCardinality = newScope.stream()
         .mapToInt(v -> this.cardinality.get(this.variables.indexOf(v)))
         .boxed()
         .collect(Collectors.toList());

@@ -50,10 +50,10 @@ class DiscreteFactorTest {
   @Test void testNormalize() {
     discreteFactor.normalize(true);
 
-    double actualValueSum = Arrays.stream(discreteFactor.getValues()).sum();
+    double actualValueSum = Arrays.stream(discreteFactor.values).sum();
 
     Assertions.assertEquals(1.0, actualValueSum, threshold);
-    Assertions.assertEquals(values.length, discreteFactor.getValues().length);
+    Assertions.assertEquals(values.length, discreteFactor.values.length);
   }
 
   @Test void testReduce() {
@@ -65,7 +65,7 @@ class DiscreteFactorTest {
 
     Assertions.assertArrayEquals(new String[]{"D", "G"}, discreteFactor.getScope());
     Assertions.assertArrayEquals(new int[]{2, 3}, discreteFactor.getCardinality());
-    Assertions.assertArrayEquals(iReduction, discreteFactor.getValues(), threshold);
+    Assertions.assertArrayEquals(iReduction, discreteFactor.values, threshold);
   }
 
   @Test void testMultipleReduction() {
@@ -78,7 +78,7 @@ class DiscreteFactorTest {
 
     Assertions.assertArrayEquals(new String[]{"I"}, discreteFactor.getScope());
     Assertions.assertArrayEquals(new int[]{2}, discreteFactor.getCardinality());
-    Assertions.assertArrayEquals(dgReduction, discreteFactor.getValues(), threshold);
+    Assertions.assertArrayEquals(dgReduction, discreteFactor.values, threshold);
   }
 
   @Test void testMarginalize() {
@@ -88,7 +88,7 @@ class DiscreteFactorTest {
 
     Assertions.assertArrayEquals(new String[]{"I", "D"}, discreteFactor.getScope());
     Assertions.assertArrayEquals(new int[]{2, 2}, discreteFactor.getCardinality());
-    Assertions.assertArrayEquals(g_marginalized, discreteFactor.getValues(), threshold);
+    Assertions.assertArrayEquals(g_marginalized, discreteFactor.values, threshold);
   }
 
   /**
@@ -101,6 +101,6 @@ class DiscreteFactorTest {
 
     Assertions.assertArrayEquals(new String[]{"I"}, discreteFactor.getScope());
     Assertions.assertArrayEquals(new int[]{2}, discreteFactor.getCardinality());
-    Assertions.assertArrayEquals(gd_marginalized, discreteFactor.getValues(), threshold);
+    Assertions.assertArrayEquals(gd_marginalized, discreteFactor.values, threshold);
   }
 }

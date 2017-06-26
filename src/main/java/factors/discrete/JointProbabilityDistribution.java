@@ -30,6 +30,11 @@ public class JointProbabilityDistribution extends DiscreteFactor {
     }
   }
 
+  public Factor copy() {
+    return new JointProbabilityDistribution(this.getScope(), this.getCardinality(),
+        this.getValues());
+  }
+
   public double[] getValues() {
     return Arrays.copyOf(this.values, this.values.length);
   }
