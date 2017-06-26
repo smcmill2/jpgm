@@ -45,10 +45,6 @@ public class DiscreteFactor implements Factor {
     rangeSize = null;
   }
 
-  public DiscreteFactor(String[] variables, int[] cardinality, double[] values) {
-    this(Arrays.asList(variables), Ints.asList(cardinality), values);
-  }
-
   public DiscreteFactor(List<String> variables, List<Integer> cardinality, double[] values) {
     this.setVariables(variables);
     this.setCardinality(cardinality);
@@ -64,8 +60,8 @@ public class DiscreteFactor implements Factor {
     this.variables = Lists.newArrayList(variables);
   }
 
-  @Override public String[] getScope() {
-    return this.variables.stream().toArray(String[]::new);
+  @Override public List<String> getScope() {
+    return Lists.newArrayList(this.variables);
   }
 
   protected void setCardinality(List<Integer> cardinality) {
@@ -81,8 +77,8 @@ public class DiscreteFactor implements Factor {
         this.size);
   }
 
-  public int[] getCardinality() {
-    return Ints.toArray(this.cardinality);
+  public List<Integer> getCardinality() {
+    return Lists.newArrayList(this.cardinality);
   }
 
   private ListMultimap<String, Integer> createAssignments(List<String> variables,
@@ -179,7 +175,7 @@ public class DiscreteFactor implements Factor {
     return result;
   }
 
-  @Override public Factor marginalize(String[] variables, boolean inPlace) {
+  @Override public Factor marginalize(List<String> variables, boolean inPlace) {
     HashSet<String> mVars = Sets.newHashSet(variables);
     List<String> newScope = this.variables.stream()
         .filter(v -> !mVars.contains(v))

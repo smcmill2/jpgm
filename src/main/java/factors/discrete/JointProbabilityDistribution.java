@@ -20,7 +20,7 @@ import java.util.List;
  *
  */
 public class JointProbabilityDistribution extends DiscreteFactor {
-  public JointProbabilityDistribution(String[] variables, int[] cardinality,
+  public JointProbabilityDistribution(List<String> variables, List<Integer> cardinality,
       double[] values) {
     super(variables, cardinality, values);
     double totalProbability = Arrays.stream(values).sum();

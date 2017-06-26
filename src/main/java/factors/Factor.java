@@ -18,7 +18,7 @@ public interface Factor {
    *
    * @return the array of the variables for the factor
    */
-  String[] getScope();
+  List<String> getScope();
 
   /**
    * Normalize the values of the factor such that they sum to 1
@@ -48,5 +48,5 @@ public interface Factor {
    *                that has been marginalized.
    * @return the marginalized factor dst or a copy.
    */
-  Factor marginalize(String[] variables, boolean inPlace);
+  Factor marginalize(List<String> variables, boolean inPlace);
 }
