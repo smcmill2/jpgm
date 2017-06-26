@@ -116,7 +116,7 @@ public class DiscreteFactor implements Factor {
         .collect(Collectors.toList()));
 
     IntStream.range(0, variables.size())
-        .forEach(i -> rangeSize.put(this.variables.get(i), ranges.get(i)));
+        .forEach(i -> rangeSize.put(variables.get(i), ranges.get(i)));
 
     return rangeSize;
   }

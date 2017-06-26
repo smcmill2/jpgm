@@ -57,8 +57,8 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
 
     this.variable = variable;
     this.vCard = vCardinality;
-    this.setVariables(evidence);
-    this.setCardinality(eCardinality);
+    this.setVariables(variables);
+    this.setCardinality(cardinality);
     this.setValues(Doubles.concat(transpose(values)));
   }
 
@@ -94,7 +94,8 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
-    return super.reduce(variables, inPlace);
+    super.reduce(variables, inPlace);
+    return super.normalize(inPlace);
   }
 
   @Override public Factor marginalize(List<String> variables, boolean inPlace) {
