@@ -20,7 +20,7 @@ import java.util.List;
  *
  */
 public class JointProbabilityDistribution extends DiscreteFactor {
-  public JointProbabilityDistribution(String[] variables, int[] cardinality,
+  public JointProbabilityDistribution(List<String> variables, List<Integer> cardinality,
       double[] values) {
     super(variables, cardinality, values);
     double totalProbability = Arrays.stream(values).sum();
@@ -28,6 +28,15 @@ public class JointProbabilityDistribution extends DiscreteFactor {
     if(Math.abs(1.0 - totalProbability) > threshold) {
       throw new RuntimeException("Total probability does not sum to 1.0\n");
     }
+  }
+
+  public Factor copy() {
+    return new JointProbabilityDistribution(this.getScope(), this.getCardinality(),
+        this.getValues());
+  }
+
+  public double[] getValues() {
+    return Arrays.copyOf(this.values, this.values.length);
   }
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,

@@ -1,5 +1,7 @@
 package factors.discrete;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,9 +14,9 @@ import java.util.stream.IntStream;
 
 class JointProbabilityDistributionTest {
   private final double threshold = 10e-8;
-  String[] variables = new String[]{"I", "D", "G"};
-  int[] cardinality = new int[]{2, 2, 3};
-  double[] values = new double[]{
+  List<String> variables = Lists.newArrayList("I", "D", "G");
+  List<Integer> cardinality = Lists.newArrayList(2, 2, 3);
+  double[] values =  new double[]{
       0.126, 0.168, 0.126,
       0.009, 0.045, 0.126,
       0.252, 0.0224, 0.0056,
@@ -39,10 +41,10 @@ class JointProbabilityDistributionTest {
   }
 
   @Test void testCopy() {
-    DiscreteFactor result = (DiscreteFactor)jpd.copy();
+    JointProbabilityDistribution result = (JointProbabilityDistribution) jpd.copy();
 
-    Assertions.assertArrayEquals(result.getScope(), jpd.getScope());
-    Assertions.assertArrayEquals(result.getCardinality(), jpd.getCardinality());
+    Assertions.assertTrue(Iterables.elementsEqual(result.getScope(), jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(result.getCardinality(), jpd.getCardinality()));
     Assertions.assertArrayEquals(result.getValues(), jpd.getValues(), threshold);
   }
 
@@ -66,8 +68,8 @@ class JointProbabilityDistributionTest {
     jpd.reduce(reduceList, true);
     double actualValueSum = Arrays.stream(jpd.getValues()).sum();
 
-    Assertions.assertArrayEquals(new String[]{"D", "G"}, jpd.getScope());
-    Assertions.assertArrayEquals(new int[]{2, 3}, jpd.getCardinality());
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), jpd.getCardinality()));
     Assertions.assertArrayEquals(expectedValues, jpd.getValues(), threshold);
     Assertions.assertEquals(1.0, actualValueSum, threshold);
   }
@@ -75,11 +77,11 @@ class JointProbabilityDistributionTest {
   @Test void testMarginalize() {
     double[] g_marginalized = new double[]{0.42, 0.18, 0.28, 0.12};
 
-    jpd.marginalize(new String[]{"G"}, true);
+    jpd.marginalize(Lists.newArrayList("G"), true);
     double actualValueSum = Arrays.stream(jpd.getValues()).sum();
 
-    Assertions.assertArrayEquals(new String[]{"I", "D"}, jpd.getScope());
-    Assertions.assertArrayEquals(new int[]{2, 2}, jpd.getCardinality());
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D"), jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2), jpd.getCardinality()));
     Assertions.assertArrayEquals(g_marginalized, jpd.getValues(), threshold);
     Assertions.assertEquals(1.0, actualValueSum, threshold);
   }

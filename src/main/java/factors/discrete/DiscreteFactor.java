@@ -29,13 +29,23 @@ import static util.Misc.joinPair;
 public class DiscreteFactor implements Factor {
   private List<String> variables;
   private List<Integer> cardinality;
-  private double[] values;
+  protected double[] values;
   private int size;
 
   private ListMultimap<String, Integer> assignmentToIdx;
   private Map<String, Integer> rangeSize;
 
-  public DiscreteFactor(String[] variables, int[] cardinality, double[] values) {
+  public DiscreteFactor() {
+    // empty constructor
+    variables = null;
+    cardinality = null;
+    values = null;
+    size = -1;
+    assignmentToIdx = null;
+    rangeSize = null;
+  }
+
+  public DiscreteFactor(List<String> variables, List<Integer> cardinality, double[] values) {
     this.setVariables(variables);
     this.setCardinality(cardinality);
     this.setValues(values);
@@ -43,22 +53,22 @@ public class DiscreteFactor implements Factor {
 
   public Factor copy() {
     return new DiscreteFactor(this.getScope(), this.getCardinality(),
-        this.getValues());
+        this.values);
   }
 
-  private void setVariables(String[] variables) {
+  protected void setVariables(List<String> variables) {
     this.variables = Lists.newArrayList(variables);
   }
 
-  @Override public String[] getScope() {
-    return this.variables.stream().toArray(String[]::new);
+  @Override public List<String> getScope() {
+    return Lists.newArrayList(this.variables);
   }
 
-  private void setCardinality(int[] cardinality) {
-    Preconditions.checkArgument(this.variables.size() == cardinality.length,
+  protected void setCardinality(List<Integer> cardinality) {
+    Preconditions.checkArgument(this.variables.size() == cardinality.size(),
         "variables and cardinality must have the same size.");
 
-    this.cardinality = Ints.asList(cardinality);
+    this.cardinality = Lists.newArrayList(cardinality);
     this.rangeSize = this.getRangeSize(this.variables, this.cardinality);
     this.size = this.rangeSize.get(this.variables.get(0)) * this.cardinality.get(0);
     this.assignmentToIdx = this.createAssignments(this.variables,
@@ -67,8 +77,8 @@ public class DiscreteFactor implements Factor {
         this.size);
   }
 
-  public int[] getCardinality() {
-    return Ints.toArray(this.cardinality);
+  public List<Integer> getCardinality() {
+    return Lists.newArrayList(this.cardinality);
   }
 
   private ListMultimap<String, Integer> createAssignments(List<String> variables,
@@ -88,7 +98,7 @@ public class DiscreteFactor implements Factor {
     return assignmentToIdx;
   }
 
-  private void setValues(double[] values) {
+  protected void setValues(double[] values) {
     Preconditions.checkArgument(values.length == this.size,
           String.format("Incorrect size of values variables. Expecting array " +
           "of size %d. Instead received array of size %d.",
@@ -106,19 +116,15 @@ public class DiscreteFactor implements Factor {
         .collect(Collectors.toList()));
 
     IntStream.range(0, variables.size())
-        .forEach(i -> rangeSize.put(this.variables.get(i), ranges.get(i)));
+        .forEach(i -> rangeSize.put(variables.get(i), ranges.get(i)));
 
     return rangeSize;
-  }
-
-  public double[] getValues() {
-    return Arrays.copyOf(this.values, this.values.length);
   }
 
   @Override public Factor normalize(boolean inPlace) {
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
 
-    double sum = Arrays.stream(result.getValues()).sum();
+    double sum = Arrays.stream(result.values).sum();
     result.setValues(Doubles.asList(this.values).stream()
         .mapToDouble(v -> v / sum)
         .toArray());
@@ -147,13 +153,14 @@ public class DiscreteFactor implements Factor {
       }
     }
 
-    String[] newScope = this.variables.stream()
+    List<String> newScope = this.variables.stream()
         .filter(v -> !rVars.contains(v))
-        .toArray(String[]::new);
+        .collect(Collectors.toList());
 
-    int[] newCardinality = Arrays.asList(newScope).stream()
+    List<Integer> newCardinality = newScope.stream()
         .mapToInt(v -> this.cardinality.get(this.variables.indexOf(v)))
-        .toArray();
+        .boxed()
+        .collect(Collectors.toList());
 
     double[] newValues = reducedIdxs.stream()
         .sorted()
@@ -168,7 +175,7 @@ public class DiscreteFactor implements Factor {
     return result;
   }
 
-  @Override public Factor marginalize(String[] variables, boolean inPlace) {
+  @Override public Factor marginalize(List<String> variables, boolean inPlace) {
     HashSet<String> mVars = Sets.newHashSet(variables);
     List<String> newScope = this.variables.stream()
         .filter(v -> !mVars.contains(v))
@@ -209,8 +216,8 @@ public class DiscreteFactor implements Factor {
     }
 
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
-    result.setVariables(newScope.stream().toArray(String[]::new));
-    result.setCardinality(Ints.toArray(newCardinality));
+    result.setVariables(newScope);
+    result.setCardinality(newCardinality);
     result.setValues(newValues);
 
     return result;
