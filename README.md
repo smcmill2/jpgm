@@ -10,6 +10,7 @@ A Java library for Probabilistic Graphical Models
     - Base Class
         - [ ] Factor Product
         - [ ] String Representations
+        - [ ] inplace operations
     - Joint Probability Distribution
         - [ ] Independencies
         - [ ] i-map of a network
