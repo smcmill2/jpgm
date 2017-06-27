@@ -105,4 +105,60 @@ class DiscreteFactorTest {
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2), discreteFactor.getCardinality()));
     Assertions.assertArrayEquals(gd_marginalized, discreteFactor.values, threshold);
   }
+
+  @Test void testProductOverlap() {
+    DiscreteFactor xy = new DiscreteFactor(
+        Lists.newArrayList("X", "Y"),
+        Lists.newArrayList(3, 2),
+        new double[]{0.5, 0.8, 0.1, 0, 0.3, 0.9}
+    );
+    DiscreteFactor yz = new DiscreteFactor(
+        Lists.newArrayList("Y", "Z"),
+        Lists.newArrayList(2, 2),
+        new double[]{0.5, 0.7, 0.1, 0.2}
+    );
+    DiscreteFactor expected = new DiscreteFactor(
+        Lists.newArrayList("X", "Y", "Z"),
+        Lists.newArrayList(3, 2, 2),
+        new double[]{
+            0.25, 0.35, 0.08, 0.16,
+            0.05, 0.07, 0, 0,
+            0.15, 0.21, 0.09, 0.18
+        }
+    );
+
+    DiscreteFactor xyz = xy.product(yz);
+
+    Assertions.assertTrue(Iterables.elementsEqual(expected.getScope(), xyz.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(expected.getCardinality(), xyz.getCardinality()));
+    Assertions.assertArrayEquals(expected.values, xyz.values, threshold);
+  }
+
+  @Test void testProductNoOverlap() {
+    DiscreteFactor x = new DiscreteFactor(
+        Lists.newArrayList("X"),
+        Lists.newArrayList(3),
+        new double[]{0.7, 0.2, 0.1}
+    );
+    DiscreteFactor y = new DiscreteFactor(
+        Lists.newArrayList("Y"),
+        Lists.newArrayList(2),
+        new double[]{0.5, 0.5}
+    );
+    DiscreteFactor expected = new DiscreteFactor(
+        Lists.newArrayList("X", "Y"),
+        Lists.newArrayList(3, 2),
+        new double[]{
+            0.35, 0.35,
+            0.10, 0.10,
+            0.05, 0.05
+        }
+    );
+
+    DiscreteFactor xy = x.product(y);
+
+    Assertions.assertTrue(Iterables.elementsEqual(expected.getScope(), xy.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(expected.getCardinality(), xy.getCardinality()));
+    Assertions.assertArrayEquals(expected.values, xy.values, threshold);
+  }
 }
