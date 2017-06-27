@@ -1,6 +1,8 @@
 package factors.discrete;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.*;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
@@ -218,6 +220,62 @@ public class DiscreteFactor implements Factor {
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
     result.setVariables(newScope);
     result.setCardinality(newCardinality);
+    result.setValues(newValues);
+
+    return result;
+  }
+
+  /**
+   * Will construct a new DiscreteFactor that is the factor of this factor
+   * with DiscreteFactor other:
+   *  - The scope of the new factor is this union other with ordering consistent
+   *  with a straight concatentation of the two factors with intersecting
+   *  variables appearing as they do in this factor.
+   *  - The cardinality will follow from the new scope.
+   *  - The values will be a multiplication of the values in the existing
+   *  factors with a size consistent with the new cardinality.
+   *
+   * @param other the DiscreteFactor to create a factor product with
+   * @return a new DiscreteFactor that is the factor product of this and other
+   */
+  public DiscreteFactor product(DiscreteFactor other) {
+    Set<String> overlapping = Sets.intersection(
+        Sets.newHashSet(this.getScope()), Sets.newHashSet(other.getScope()));
+
+    List<String> newScope = this.getScope();
+    List<Integer> newCardinality = this.getCardinality();
+    IntStream.range(0, other.getScope().size())
+        .filter(i -> !overlapping.contains(other.getScope().get(i)))
+        .forEach(i -> {
+          newScope.add(other.getScope().get(i));
+          newCardinality.add(other.getCardinality().get(i));
+        });
+
+    DiscreteFactor result = new DiscreteFactor();
+    result.setVariables(newScope);
+    result.setCardinality(newCardinality);
+
+    double[] newValues = new double[result.size];
+    TreeMultimap<Integer, String> invertedMap = Multimaps.invertFrom(
+        result.assignmentToIdx, TreeMultimap.create());
+    for(int i = 0;i < newValues.length;++i) {
+      Set<Integer> thisIdx = Sets.newHashSet(IntStream.range(0, this.size).iterator());
+      Set<Integer> otherIdx = Sets.newHashSet(IntStream.range(0, other.size).iterator());
+      for(String assignment : invertedMap.get(i)) {
+        Set<Integer> indices = Sets.newHashSet(this.assignmentToIdx.get(assignment));
+        Set<Integer> oIndices = Sets.newHashSet(other.assignmentToIdx.get(assignment));
+
+        if(indices.size() > 0) {
+          thisIdx = Sets.intersection(thisIdx, indices);
+        }
+        if(oIndices.size() > 0) {
+          otherIdx = Sets.intersection(otherIdx, oIndices);
+        }
+      }
+
+      newValues[i] = this.values[(int)thisIdx.toArray()[0]] * other.values[(int)otherIdx.toArray()[0]];
+    }
+
     result.setValues(newValues);
 
     return result;
