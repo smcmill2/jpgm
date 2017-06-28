@@ -34,6 +34,20 @@ class ConditionalProbabilityDistributionTest {
     cpd = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
   }
 
+  @Test void testEquals() {
+    ConditionalProbabilityDistribution cpd2 = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
+    ConditionalProbabilityDistribution cpd3 = new ConditionalProbabilityDistribution("g", 3, evidence, eCardinality, expectedTable);
+    ConditionalProbabilityDistribution cpd4 = new ConditionalProbabilityDistribution("G", 2, new double[][]{{0.2},{0.8}});
+
+    expectedTable[0][0] = 1.0;
+    ConditionalProbabilityDistribution cpd5 = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
+
+    Assertions.assertTrue(cpd.equals(cpd2));
+    Assertions.assertTrue(!cpd.equals(cpd3));
+    Assertions.assertTrue(!cpd.equals(cpd4));
+    Assertions.assertTrue(!cpd.equals(cpd5));
+  }
+
   @Test void testNormalize() {
     Factor result = cpd.normalize(true);
 
