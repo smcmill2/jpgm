@@ -25,6 +25,10 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
   private String variable;
   private int vCard;
 
+  public ConditionalProbabilityDistribution() {
+    this(null, 0, null, null, null);
+  }
+
   public ConditionalProbabilityDistribution(String variable, int vCardinality,
       double[][] values) {
     this(variable, vCardinality, null, null, values);
