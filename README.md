@@ -22,6 +22,7 @@ A Java library for Probabilistic Graphical Models
     - [ ] Partitioning/Normalization
 - Inference
     - [ ] Variable Elimination
+        - [x] Elimination ordering
         - [ ] Sum-Product
         - [ ] Max-Product
 - Toy Examples

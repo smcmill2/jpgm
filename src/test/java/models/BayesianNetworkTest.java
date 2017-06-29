@@ -71,6 +71,7 @@ class BayesianNetworkTest {
     bayesianNetwork.addEdge(s, j);
     bayesianNetwork.addEdge(g, h);
     bayesianNetwork.addEdge(j, h);
+    bayesianNetwork.addEdge(l, j);
 
     Assertions.assertTrue(!bayesianNetwork.isDSep("D", "I", Sets.newHashSet("L")));
     Assertions.assertTrue(!bayesianNetwork.isDSep("D", "J", Sets.newHashSet("L")));

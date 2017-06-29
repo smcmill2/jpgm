@@ -1,10 +1,12 @@
 package util;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.graph.Graph;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implement miscellaneous helper functions.
@@ -22,6 +24,14 @@ public class Misc {
     return joinPair(pair.getLeft(), pair.getRight(), joinVal);
   }
 
+  public static List<String> eliminationOrder(Graph<String> g) {
+    Tarjan t = new Tarjan(g);
+
+    return Lists.reverse(t.SCC).stream()
+        .flatMap(n -> n.stream())
+        .collect(Collectors.toList());
+  }
+
   public static boolean hasCycles(Graph<String> g) {
     Tarjan t = new Tarjan(g);
     return t.hasCycles();
@@ -32,9 +42,8 @@ public class Misc {
     private Map<String, Integer> lowlink;
     private Set<String> onStack;
     private Stack<String> S;
-    private Map<String, List<String>> SCC;
+    private List<List<String>> SCC;
     private int idx;
-    private int count;
 
     public Tarjan(Graph<String> g) {
       this.index = new HashMap<>();
@@ -43,13 +52,12 @@ public class Misc {
       this.S = new Stack<>();
 
       this.idx = 0;
-      this.count = 0;
 
-      this.SCC = new HashMap<>();
+      this.SCC = new ArrayList<>();
 
       for(String v : g.nodes()) {
-        if(!this.onStack.contains(v)) {
-          dfs(g, v);
+        if(!this.lowlink.keySet().contains(v)) {
+          this.dfs(g, v);
         }
       }
     }
@@ -59,34 +67,35 @@ public class Misc {
       this.lowlink.put(v, this.idx);
       this.idx++;
       this.S.push(v);
+
       this.onStack.add(v);
 
       for(String w : g.successors(v)) {
-        if(!this.index.keySet().contains(w)) {
-          dfs(g, w);
+        if(!this.lowlink.keySet().contains(w)) {
+          this.dfs(g, w);
           this.lowlink.put(v, Math.min(this.lowlink.get(v), this.lowlink.get(w)));
         } else if(this.onStack.contains(w)) {
           this.lowlink.put(v, Math.min(this.lowlink.get(v), this.index.get(w)));
         }
       }
 
-      if(this.lowlink.get(v) == this.index.get(v)) {
+      if(this.lowlink.get(v).intValue() == this.index.get(v).intValue()) {
         List<String> component = new ArrayList<>();
 
         String w;
         do {
-          w = S.pop();
+          w = this.S.pop();
           this.onStack.remove(w);
           component.add(w);
         } while (!w.equals(v));
-        this.SCC.put(v, component);
+        this.SCC.add(component);
       }
     }
 
     public boolean hasCycles() {
       boolean cycle = false;
 
-      for(List<String> component : this.SCC.values()) {
+      for(List<String> component : this.SCC) {
         if(component.size() > 1) {
           cycle = true;
           break;
