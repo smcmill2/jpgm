@@ -1,5 +1,6 @@
 package factors.discrete;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
@@ -23,6 +24,10 @@ import java.util.stream.DoubleStream;
 public class ConditionalProbabilityDistribution extends DiscreteFactor {
   private String variable;
   private int vCard;
+
+  public ConditionalProbabilityDistribution() {
+    this(null, 0, null, null, null);
+  }
 
   public ConditionalProbabilityDistribution(String variable, int vCardinality,
       double[][] values) {
@@ -60,6 +65,28 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
     this.setVariables(variables);
     this.setCardinality(cardinality);
     this.setValues(Doubles.concat(transpose(values)));
+  }
+
+  public boolean equals(ConditionalProbabilityDistribution other) {
+    boolean isEqual = true;
+    if(!this.variable.equals(other.variable)) {
+      isEqual = false;
+    } else if(this.vCard != other.vCard) {
+      isEqual = false;
+    } else if(!Iterables.elementsEqual(this.getScope(), other.getScope())) {
+      isEqual = false;
+    } else if(!Iterables.elementsEqual(this.getCardinality(), other.getCardinality())) {
+      isEqual = false;
+    } else {
+      isEqual = Iterables.elementsEqual(Doubles.asList(this.values),
+          Doubles.asList(other.values));
+    }
+
+    return isEqual;
+  }
+
+  public String getVariable() {
+    return this.variable;
   }
 
   public double[][] getValues() {
