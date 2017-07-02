@@ -155,14 +155,9 @@ public class DiscreteFactor implements Factor {
       }
     }
 
-    List<String> newScope = this.variables.stream()
-        .filter(v -> !rVars.contains(v))
-        .collect(Collectors.toList());
-
-    List<Integer> newCardinality = newScope.stream()
-        .mapToInt(v -> this.cardinality.get(this.variables.indexOf(v)))
-        .boxed()
-        .collect(Collectors.toList());
+    List<Integer> newCardinality = this.getCardinality();
+    rVars.stream()
+        .forEach(v -> newCardinality.set(this.variables.indexOf(v), 1));
 
     double[] newValues = reducedIdxs.stream()
         .sorted()
@@ -170,7 +165,7 @@ public class DiscreteFactor implements Factor {
         .toArray();
 
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
-    result.setVariables(newScope);
+    result.setVariables(this.getScope());
     result.setCardinality(newCardinality);
     result.setValues(newValues);
 

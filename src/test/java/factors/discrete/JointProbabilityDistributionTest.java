@@ -68,8 +68,8 @@ class JointProbabilityDistributionTest {
     jpd.reduce(reduceList, true);
     double actualValueSum = Arrays.stream(jpd.getValues()).sum();
 
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), jpd.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), jpd.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), jpd.getCardinality()));
     Assertions.assertArrayEquals(expectedValues, jpd.getValues(), threshold);
     Assertions.assertEquals(1.0, actualValueSum, threshold);
   }

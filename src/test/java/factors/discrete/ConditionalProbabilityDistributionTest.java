@@ -71,8 +71,8 @@ class ConditionalProbabilityDistributionTest {
     Factor result = cpd.reduce(reduction, true);
     double[][] actual = cpd.getValues();
 
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "G"), cpd.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(3), cpd.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "I", "D", "G"), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 1, 3), cpd.getCardinality()));
     for(int r = 0;r < expected.length;++r) {
       Assertions.assertArrayEquals(expected[r], actual[r], threshold);
     }

@@ -39,7 +39,7 @@ A Java library for Probabilistic Graphical Models
 - Implement Discrete Factor Representation
     - Base Class
         - [ ] String Representations
-        - [ ] inplace operations
+        - [x] inplace operations
     - Joint Probability Distribution
         - [ ] i-map of a network
         - [ ] p-map of a network
@@ -55,7 +55,7 @@ A Java library for Probabilistic Graphical Models
         - [ ] i-equivalence
     - Markov Network
 - Inference
-    - Inference over generalized factor graph
+    - [ ] Inference over generalized factor graph
 - Toy Examples
     - Student example
         - [ ] Showcase current features for 1.1.0
