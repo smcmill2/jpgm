@@ -13,6 +13,7 @@ import java.util.List;
  */
 public interface Factor {
   double threshold = 10e-8;
+  double[] values = new double[]{};
   /**
    * Return the scope of the factor
    *

@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class ListOpsTest {
+  double threshold = 10e-8;
   List<Integer> l1;
   List<Integer> l2;
 
@@ -41,5 +43,15 @@ class ListOpsTest {
         .mapToObj(i -> Pair.of(i, l2.get(i).toString()))
         .collect(Collectors.toList());
     Assertions.assertEquals(expected, result);
+  }
+
+  @Test void testNormalize() {
+    double[] array = new double[]{1.0, 1.0, 1.0, 1.0};
+
+    double[] normalizedArray = ListOps.normalize(array);
+
+    Assertions.assertArrayEquals(new double[]{0.25, 0.25, 0.25, 0.25},
+        normalizedArray, threshold);
+    Assertions.assertEquals(1.0, Arrays.stream(normalizedArray).sum(), threshold);
   }
 }

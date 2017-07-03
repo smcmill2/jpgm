@@ -3,6 +3,7 @@ package util;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.graph.Graph;
+import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -24,6 +25,12 @@ public class Misc {
     return joinPair(pair.getLeft(), pair.getRight(), joinVal);
   }
 
+  /**
+   * TODO Refactor into it's own class that has multiple methods for
+   * elimination ordering
+   * @param g
+   * @return
+   */
   public static List<String> eliminationOrder(Graph<String> g) {
     Tarjan t = new Tarjan(g);
 

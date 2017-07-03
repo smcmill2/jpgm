@@ -1,7 +1,9 @@
 package factors.discrete;
 
+import com.google.common.primitives.Doubles;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import util.ListOps;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +43,12 @@ public class JointProbabilityDistribution extends DiscreteFactor {
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
-    Factor f = super.reduce(variables, inPlace);
-    return f.normalize(inPlace);
+    Factor factor = super.reduce(variables, inPlace);
+
+    // Can't initialize a new JPD that doesn't sum to 1.0
+    ((JointProbabilityDistribution)factor).setValues(
+        ListOps.normalize(((JointProbabilityDistribution) factor).getValues()));
+
+    return factor;
   }
 }

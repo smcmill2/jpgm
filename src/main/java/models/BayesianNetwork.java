@@ -31,6 +31,10 @@ public class BayesianNetwork {
     this.g = GraphBuilder.directed().allowsSelfLoops(false).build();
   }
 
+  public List<ConditionalProbabilityDistribution> getCPDs() {
+    return Lists.newArrayList(this.varMap.values());
+  }
+
   public void addEdge(String u, String v) {
     this.addEdge(this.varMap.get(u), this.varMap.get(v));
   }
@@ -45,6 +49,15 @@ public class BayesianNetwork {
     this.varMap.put(u.getVariable(), u);
     this.varMap.put(v.getVariable(), v);
     this.g.putEdge(u.getVariable(), v.getVariable());
+  }
+
+  public List<String> getEliminationOrder(List<String> variables, List<String> evidence) {
+    List<String> order = Misc.eliminationOrder(this.g);
+    order.removeAll(variables);
+    if(evidence != null) {
+      order.removeAll(evidence);
+    }
+    return order;
   }
 
   private boolean createsCycle(String u, String v) {

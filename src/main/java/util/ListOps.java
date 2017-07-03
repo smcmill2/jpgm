@@ -1,8 +1,10 @@
 package util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.primitives.Doubles;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,6 +29,13 @@ public class ListOps {
     return IntStream.range(0, list.size())
         .mapToObj(i -> Pair.of(i, list.get(i)))
         .collect(Collectors.toList());
+  }
+
+  public static double[] normalize(double[] values) {
+    double sum = Arrays.stream(values).sum();
+    return Doubles.asList(values).stream()
+        .mapToDouble(v -> v / sum)
+        .toArray();
   }
 
   /*

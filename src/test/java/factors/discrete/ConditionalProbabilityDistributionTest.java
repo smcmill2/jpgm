@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 class ConditionalProbabilityDistributionTest {
@@ -34,6 +33,18 @@ class ConditionalProbabilityDistributionTest {
     cpd = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
   }
 
+  @Test void testCopy() {
+    ConditionalProbabilityDistribution copiedCPD = (ConditionalProbabilityDistribution) cpd.copy();
+
+    Assertions.assertTrue(copiedCPD.getVariable().equals(cpd.getVariable()));
+    Assertions.assertTrue(copiedCPD.getVariableCardinality() == cpd.getVariableCardinality());
+    Assertions.assertTrue(Iterables.elementsEqual(copiedCPD.getScope(), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(copiedCPD.getCardinality(), cpd.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(copiedCPD.getEvidence(), cpd.getEvidence()));
+    Assertions.assertTrue(Iterables.elementsEqual(copiedCPD.getEvidenceCardinality(), cpd.getEvidenceCardinality()));
+    Assertions.assertArrayEquals(copiedCPD.values, cpd.values, threshold);
+  }
+
   @Test void testEquals() {
     ConditionalProbabilityDistribution cpd2 = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
     ConditionalProbabilityDistribution cpd3 = new ConditionalProbabilityDistribution("g", 3, evidence, eCardinality, expectedTable);
@@ -49,11 +60,22 @@ class ConditionalProbabilityDistributionTest {
   }
 
   @Test void testNormalize() {
-    Factor result = cpd.normalize(true);
+    Factor result = cpd.normalize(false);
 
-    double[][] actual = cpd.getValues();
+    // Check new factor is normalized version
     for(int r = 0;r < expectedNormedTable.length;++r) {
-      Assertions.assertArrayEquals(expectedNormedTable[r], actual[r], threshold);
+      Assertions.assertArrayEquals(expectedNormedTable[r],
+          ((ConditionalProbabilityDistribution)result).getValues()[r], threshold);
+    }
+    // Check existing factor has not changed
+    for(int r = 0;r < expectedTable.length;++r) {
+      Assertions.assertArrayEquals(expectedTable[r],
+          cpd.getValues()[r], threshold);
+    }
+
+    cpd.normalize(true);
+    for(int r = 0;r < expectedNormedTable.length;++r) {
+      Assertions.assertArrayEquals(expectedNormedTable[r], cpd.getValues()[r], threshold);
     }
   }
 
@@ -68,13 +90,30 @@ class ConditionalProbabilityDistributionTest {
     reduction.add(Pair.of("D", 0));
     reduction.add(Pair.of("I", 1));
 
-    Factor result = cpd.reduce(reduction, true);
-    double[][] actual = cpd.getValues();
+    Factor factor = cpd.reduce(reduction, false);
+    // Check new factor is reduced version
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "I", "D", "G"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 1, 3),
+        ((ConditionalProbabilityDistribution)factor).getCardinality()));
+    for(int r = 0;r < expected.length;++r) {
+      Assertions.assertArrayEquals(expected[r],
+          ((ConditionalProbabilityDistribution)factor).getValues()[r], threshold);
+    }
+    // Check existing factor has not changed
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "I", "D", "G"), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2, 3),
+        cpd.getCardinality()));
+    for(int r = 0;r < expected.length;++r) {
+      Assertions.assertArrayEquals(expectedTable[r],
+          cpd.getValues()[r], threshold);
+    }
+
+    cpd.reduce(reduction, true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "I", "D", "G"), cpd.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 1, 3), cpd.getCardinality()));
     for(int r = 0;r < expected.length;++r) {
-      Assertions.assertArrayEquals(expected[r], actual[r], threshold);
+      Assertions.assertArrayEquals(expected[r], cpd.getValues()[r], threshold);
     }
   }
 
@@ -85,15 +124,29 @@ class ConditionalProbabilityDistributionTest {
         {0.188, 0.5}
     };
 
-    Factor result = cpd
-        .marginalize(Lists.newArrayList("I"), true);
+    Factor factor = cpd
+        .marginalize(Lists.newArrayList("I"), false);
 
-    double[][] actual = cpd.getValues();
+    // Check new factor is marginalized version
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3),
+        ((ConditionalProbabilityDistribution)factor).getCardinality()));
+    for(int r = 0;r < expectedNormedTable.length;++r) {
+      Assertions.assertArrayEquals(expected[r], ((ConditionalProbabilityDistribution)factor).getValues()[r], threshold);
+    }
+    // Check existing factor has not changed
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2, 3), cpd.getCardinality()));
+    for(int r = 0;r < expectedTable.length;++r) {
+      Assertions.assertArrayEquals(expectedTable[r], cpd.getValues()[r], threshold);
+    }
+
+    cpd.marginalize(Lists.newArrayList("I"), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), cpd.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), cpd.getCardinality()));
     for(int r = 0;r < expectedNormedTable.length;++r) {
-      Assertions.assertArrayEquals(expected[r], actual[r], threshold);
+      Assertions.assertArrayEquals(expected[r], cpd.getValues()[r], threshold);
     }
   }
 }

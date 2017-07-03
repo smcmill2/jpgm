@@ -2,6 +2,7 @@ package factors.discrete;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,24 +66,23 @@ class JointProbabilityDistributionTest {
     List<Pair<String, Integer>> reduceList = new ArrayList<>();
     reduceList.add(Pair.of("I", 1));
 
+    Factor factor = jpd.reduce(reduceList, false);
+
+    // Check new factor is reduced version
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), ((JointProbabilityDistribution)factor).getCardinality()));
+    Assertions.assertArrayEquals(expectedValues, ((JointProbabilityDistribution)factor).getValues(), threshold);
+    Assertions.assertEquals(1.0, Arrays.stream(((JointProbabilityDistribution) factor).getValues()).sum(), threshold);
+    // Check existing factor has not changed
+    Assertions.assertTrue(Iterables.elementsEqual(variables, jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(cardinality, jpd.getCardinality()));
+    Assertions.assertArrayEquals(values, jpd.getValues(), threshold);
+
     jpd.reduce(reduceList, true);
-    double actualValueSum = Arrays.stream(jpd.getValues()).sum();
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), jpd.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), jpd.getCardinality()));
     Assertions.assertArrayEquals(expectedValues, jpd.getValues(), threshold);
-    Assertions.assertEquals(1.0, actualValueSum, threshold);
-  }
-
-  @Test void testMarginalize() {
-    double[] g_marginalized = new double[]{0.42, 0.18, 0.28, 0.12};
-
-    jpd.marginalize(Lists.newArrayList("G"), true);
-    double actualValueSum = Arrays.stream(jpd.getValues()).sum();
-
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D"), jpd.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2), jpd.getCardinality()));
-    Assertions.assertArrayEquals(g_marginalized, jpd.getValues(), threshold);
-    Assertions.assertEquals(1.0, actualValueSum, threshold);
+    Assertions.assertEquals(1.0, Arrays.stream(jpd.getValues()).sum(), threshold);
   }
 }

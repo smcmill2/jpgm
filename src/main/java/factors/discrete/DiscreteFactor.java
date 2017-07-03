@@ -8,6 +8,8 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import util.ListOps;
+import util.Misc;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,13 +40,9 @@ public class DiscreteFactor implements Factor {
   private Map<String, Integer> rangeSize;
 
   public DiscreteFactor() {
-    // empty constructor
-    variables = null;
-    cardinality = null;
-    values = null;
-    size = -1;
-    assignmentToIdx = null;
-    rangeSize = null;
+    // empty constructor, empty set with probability 1
+    this(Lists.newArrayList("{}"),
+        Lists.newArrayList(1), new double[]{1.0});
   }
 
   public DiscreteFactor(List<String> variables, List<Integer> cardinality, double[] values) {
@@ -124,14 +122,12 @@ public class DiscreteFactor implements Factor {
   }
 
   @Override public Factor normalize(boolean inPlace) {
-    DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
+    DiscreteFactor factor = inPlace ? this :
+        (DiscreteFactor) this.copy();
 
-    double sum = Arrays.stream(result.values).sum();
-    result.setValues(Doubles.asList(this.values).stream()
-        .mapToDouble(v -> v / sum)
-        .toArray());
+    factor.setValues(ListOps.normalize(factor.values));
 
-    return result;
+    return factor;
   }
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,

@@ -3,13 +3,14 @@ package factors.discrete;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Ints;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import util.ListOps;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.DoubleStream;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Implements a conditional probability distribution where one variable is
@@ -68,7 +69,7 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
   }
 
   public boolean equals(ConditionalProbabilityDistribution other) {
-    boolean isEqual = true;
+    boolean isEqual;
     if(!this.variable.equals(other.variable)) {
       isEqual = false;
     } else if(this.vCard != other.vCard) {
@@ -85,8 +86,29 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
     return isEqual;
   }
 
+  public Factor copy() {
+    return new ConditionalProbabilityDistribution(this.getVariable(),
+        this.getVariableCardinality(),
+        this.getEvidence(), this.getEvidenceCardinality(), this.getValues());
+  }
+
   public String getVariable() {
     return this.variable;
+  }
+
+  public int getVariableCardinality() { return this.vCard; }
+
+  public List<String> getEvidence() {
+    return this.getScope().stream()
+        .filter(v -> !v.equals(this.getVariable()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Integer> getEvidenceCardinality() {
+    return ListOps.zip(this.getScope(), this.getCardinality()).stream()
+        .filter(pair -> !pair.getLeft().equals(this.getVariable()))
+        .map(pair -> pair.getRight())
+        .collect(Collectors.toList());
   }
 
   public double[][] getValues() {
@@ -104,7 +126,10 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
 
   @Override
   public Factor normalize(boolean inPlace) {
-    double[][] transposedTable = transpose(this.getValues());
+    ConditionalProbabilityDistribution result = inPlace ? this :
+        (ConditionalProbabilityDistribution) this.copy();
+
+    double[][] transposedTable = transpose(result.getValues());
 
 
     for(int c = 0;c < transposedTable.length;++c) {
@@ -114,20 +139,20 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
           .toArray();
     }
 
-    this.setValues(Doubles.concat(transposedTable));
+    result.setValues(Doubles.concat(transposedTable));
 
-    return null;
+    return result;
   }
 
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
-    super.reduce(variables, inPlace);
-    return super.normalize(inPlace);
+    Factor factor = super.reduce(variables, inPlace);
+    return factor.normalize(inPlace);
   }
 
   @Override public Factor marginalize(List<String> variables, boolean inPlace) {
-    super.marginalize(variables, inPlace);
-    return this.normalize(inPlace);
+    Factor factor = super.marginalize(variables, inPlace);
+    return factor.normalize(inPlace);
   }
 
   /**
