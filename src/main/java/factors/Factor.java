@@ -14,6 +14,14 @@ import java.util.List;
 public interface Factor {
   double threshold = 10e-8;
   double[] values = new double[]{};
+
+  /**
+   * Return a string representation of the class.
+   *
+   * @return a String representation of the class
+   */
+  String toString();
+
   /**
    * Return the scope of the factor
    *

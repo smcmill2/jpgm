@@ -51,6 +51,44 @@ public class DiscreteFactor implements Factor {
     this.setValues(values);
   }
 
+  public String toString() {
+    String header = Joiner.on(" | ").join(
+        this.getScope().stream()
+            .map(v -> String.format(" %s ", v))
+        .collect(Collectors.toList())) +
+        " | " +
+        "\u03C6(" + Joiner.on(",").join(this.getScope()) + ")";
+
+    TreeMultimap<Integer, String> invertedMap = Multimaps.invertFrom(this.assignmentToIdx,
+        TreeMultimap.create());
+
+    List<String> bodyList = Lists.newArrayList();
+    for(int i = 0;i < this.values.length;++i) {
+      bodyList.add(Joiner.on(" | ").join(this.scopeSort(Lists.newArrayList(invertedMap.get(i)))) + " | " +
+              String.format("%.4f", this.values[i])
+      );
+    }
+
+    String body = Joiner.on("\n").join(bodyList);
+
+    return Joiner.on("\n").join(header, body);
+  }
+
+  private List<String> scopeSort(List<String> assignments) {
+    List<Pair<String, Integer>> assignmentsToOrder = new ArrayList<>();
+    for(String assignment : assignments) {
+      String variable = Splitter.on("=").splitToList(assignment).get(0);
+      Integer position = this.getScope().indexOf(variable);
+      assignmentsToOrder.add(Pair.of(assignment, position));
+    }
+
+    return assignmentsToOrder.stream()
+        .sorted(Comparator.comparingInt(Pair::getRight))
+        .map(Pair::getLeft)
+        .collect(Collectors.toList());
+
+  }
+
   public Factor copy() {
     return new DiscreteFactor(this.getScope(), this.getCardinality(),
         this.values);

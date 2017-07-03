@@ -1,5 +1,6 @@
 package factors.discrete;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import factors.Factor;
@@ -34,6 +35,26 @@ class DiscreteFactorTest {
 
   @BeforeEach void setUp() {
     discreteFactor = new DiscreteFactor(variables, cardinality, values);
+  }
+
+  @Test void testToString() {
+    String expectedStr = Joiner.on("\n").join(
+        Lists.newArrayList(
+            " I  |  D  |  G  | \u03C6(" + Joiner.on(",").join(variables) +")",
+            "I=0 | D=0 | G=0 | 0.1260",
+            "I=0 | D=0 | G=1 | 0.1680",
+            "I=0 | D=0 | G=2 | 0.1260",
+            "I=0 | D=1 | G=0 | 0.0090",
+            "I=0 | D=1 | G=1 | 0.0450",
+            "I=0 | D=1 | G=2 | 0.1260",
+            "I=1 | D=0 | G=0 | 0.2520",
+            "I=1 | D=0 | G=1 | 0.0224",
+            "I=1 | D=0 | G=2 | 0.0056",
+            "I=1 | D=1 | G=0 | 0.0600",
+            "I=1 | D=1 | G=1 | 0.0360",
+            "I=1 | D=1 | G=2 | 0.0240"
+        ));
+    Assertions.assertTrue(expectedStr.equals(discreteFactor.toString()));
   }
 
   @Test void testValidFactor() {
