@@ -117,6 +117,25 @@ class ConditionalProbabilityDistributionTest {
     }
   }
 
+  @Test void testReduceCPDVariable() {
+    double[][] expected = new double[][]{
+        {1.0, 1.0, 1.0, 1.0},
+    };
+
+    List<Pair<String, Integer>> reduction = new ArrayList<>();
+    reduction.add(Pair.of("G", 0));
+
+    cpd.reduce(reduction, true);
+
+    Assertions.assertTrue(cpd.getVariable().equals("G"));
+    Assertions.assertTrue(cpd.getVariableCardinality() == 1);
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2, 1), cpd.getCardinality()));
+    for(int r = 0;r < expected.length;++r) {
+      Assertions.assertArrayEquals(expected[r], cpd.getValues()[r], threshold);
+    }
+  }
+
   @Test void testMarginalize() {
     double[][] expected = new double[][]{
         {0.54, 0.23},

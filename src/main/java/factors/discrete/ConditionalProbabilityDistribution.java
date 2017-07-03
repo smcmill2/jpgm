@@ -147,6 +147,9 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
     Factor factor = super.reduce(variables, inPlace);
+    ((ConditionalProbabilityDistribution)factor).vCard =
+        ((ConditionalProbabilityDistribution) factor).getCardinality().get(
+            factor.getScope().indexOf(this.variable));
     return factor.normalize(inPlace);
   }
 
