@@ -41,8 +41,8 @@ public class DiscreteFactor implements Factor {
 
   public DiscreteFactor() {
     // empty constructor, empty set with probability 1
-    this(Lists.newArrayList("{}"),
-        Lists.newArrayList(1), new double[]{1.0});
+    this(Lists.newArrayList(),
+        Lists.newArrayList(), new double[]{1.0});
   }
 
   public DiscreteFactor(List<String> variables, List<Integer> cardinality, double[] values) {
@@ -95,6 +95,20 @@ public class DiscreteFactor implements Factor {
   public Factor copy() {
     return new DiscreteFactor(this.getScope(), this.getCardinality(),
         this.values);
+  }
+
+  public boolean equals(DiscreteFactor other) {
+    boolean isEqual;
+    if(!Iterables.elementsEqual(this.getScope(), other.getScope())) {
+      isEqual = false;
+    } else if(!Iterables.elementsEqual(this.getCardinality(), other.getCardinality())) {
+      isEqual = false;
+    } else {
+      isEqual = Iterables.elementsEqual(Doubles.asList(this.values),
+          Doubles.asList(other.values));
+    }
+
+    return isEqual;
   }
 
   protected void setVariables(List<String> variables) {
@@ -163,6 +177,11 @@ public class DiscreteFactor implements Factor {
     return rangeSize;
   }
 
+  public double getValue(Pair<String, Integer> assignment) {
+    return this.assignmentToIdx.get(Misc.joinPair(assignment, "=")).stream()
+        .mapToDouble(idx -> this.values[idx]).sum();
+  }
+
   @Override public Factor normalize(boolean inPlace) {
     DiscreteFactor factor = inPlace ? this :
         (DiscreteFactor) this.copy();
@@ -172,11 +191,13 @@ public class DiscreteFactor implements Factor {
     return factor;
   }
 
+  // TODO when reducing set new factorString value
   @Override public Factor reduce(List<Pair<String, Integer>> variables,
       boolean inPlace) {
     HashSet<String> rVars = new HashSet<>();
     HashSet<Integer> rVarIdxs = new HashSet<>();
     HashSet reducedIdxs = new HashSet();
+    reducedIdxs.addAll(IntStream.range(0, this.size).boxed().collect(Collectors.toList()));
     for(Pair<String, Integer> varAss : variables) {
       String variable = varAss.getLeft();
       String assignment = joinPair(varAss, "=");
@@ -185,12 +206,8 @@ public class DiscreteFactor implements Factor {
       rVars.add(variable);
       rVarIdxs.add(vIdx);
       List<Integer> assignedIdxs = this.assignmentToIdx.get(assignment);
-      if(reducedIdxs.isEmpty()) {
-        reducedIdxs.addAll(assignedIdxs);
-      } else {
-        reducedIdxs.retainAll(Sets.intersection(reducedIdxs,
-            Sets.newHashSet(assignedIdxs)));
-      }
+      reducedIdxs.retainAll(Sets.intersection(reducedIdxs,
+          Sets.newHashSet(assignedIdxs)));
     }
 
     List<String> newScope = this.getScope().stream()

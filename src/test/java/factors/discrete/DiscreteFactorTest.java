@@ -8,10 +8,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.mockito.Mockito.when;
 
 /**
  * Test class for DiscreteFactor
@@ -71,6 +75,15 @@ class DiscreteFactorTest {
     Assertions.assertThrows(IllegalArgumentException.class, () -> new DiscreteFactor(tooFewVars, cardinality, values));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new DiscreteFactor(variables, tooManyCard, values));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new DiscreteFactor(variables, cardinality, incorrectValueSize));
+  }
+
+  @Test void testEquals() {
+    DiscreteFactor other = new DiscreteFactor(variables, cardinality, values);
+
+    Assertions.assertTrue(discreteFactor.equals(other));
+
+    DiscreteFactor emptyFactor = new DiscreteFactor();
+    Assertions.assertTrue(emptyFactor.equals(new DiscreteFactor()));
   }
 
   @Test void testGetScope() {

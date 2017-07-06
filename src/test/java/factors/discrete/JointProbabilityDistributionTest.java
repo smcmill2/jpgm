@@ -69,8 +69,8 @@ class JointProbabilityDistributionTest {
     Factor factor = jpd.reduce(reduceList, false);
 
     // Check new factor is reduced version
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), factor.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), ((JointProbabilityDistribution)factor).getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "D", "G"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( 2, 3), ((JointProbabilityDistribution)factor).getCardinality()));
     Assertions.assertArrayEquals(expectedValues, ((JointProbabilityDistribution)factor).getValues(), threshold);
     Assertions.assertEquals(1.0, Arrays.stream(((JointProbabilityDistribution) factor).getValues()).sum(), threshold);
     // Check existing factor has not changed
@@ -80,8 +80,8 @@ class JointProbabilityDistributionTest {
 
     jpd.reduce(reduceList, true);
 
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), jpd.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), jpd.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "D", "G"), jpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( 2, 3), jpd.getCardinality()));
     Assertions.assertArrayEquals(expectedValues, jpd.getValues(), threshold);
     Assertions.assertEquals(1.0, Arrays.stream(jpd.getValues()).sum(), threshold);
   }
