@@ -3,9 +3,11 @@ package models;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 import factors.discrete.ConditionalProbabilityDistribution;
 import org.apache.commons.lang3.tuple.Pair;
+import util.GraphOps;
 import util.Misc;
 
 import java.util.*;
@@ -31,8 +33,21 @@ public class BayesianNetwork {
     this.g = GraphBuilder.directed().allowsSelfLoops(false).build();
   }
 
+  public ConditionalProbabilityDistribution getNodeCPD(String node) {
+    return this.varMap.get(node);
+  }
+
   public List<ConditionalProbabilityDistribution> getCPDs() {
     return Lists.newArrayList(this.varMap.values());
+  }
+
+  public ImmutableGraph<String> getMoralStructure() {
+    return GraphOps.getMoralGraph(this.g);
+
+  }
+
+  public ImmutableGraph<String> getStructure() {
+    return ImmutableGraph.copyOf(this.g);
   }
 
   public void addEdge(String u, String v) {
