@@ -92,6 +92,10 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
         this.getEvidence(), this.getEvidenceCardinality(), this.getValues());
   }
 
+  public DiscreteFactor toDiscreteFactor() {
+    return new DiscreteFactor(this.getScope(), this.getCardinality(), this.values);
+  }
+
   public String getVariable() {
     return this.variable;
   }

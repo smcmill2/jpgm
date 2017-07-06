@@ -25,7 +25,7 @@
     <!-- Properties -->
     <properties>
         <app.name>JPGM</app.name>
-        <app.main.class>examples.Student</app.main.class>
+        <app.main.class>examples.Traffic</app.main.class>
         <jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

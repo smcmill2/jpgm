@@ -56,8 +56,7 @@ public class DiscreteFactor implements Factor {
         this.getScope().stream()
             .map(v -> String.format(" %s ", v))
         .collect(Collectors.toList())) +
-        " | " +
-        "\u03C6(" + Joiner.on(",").join(this.getScope()) + ")";
+        " | " + this.factorString();
 
     TreeMultimap<Integer, String> invertedMap = Multimaps.invertFrom(this.assignmentToIdx,
         TreeMultimap.create());
@@ -72,6 +71,10 @@ public class DiscreteFactor implements Factor {
     String body = Joiner.on("\n").join(bodyList);
 
     return Joiner.on("\n").join(header, body);
+  }
+
+  public String factorString() {
+    return "\u03C6(" + Joiner.on(",").join(this.getScope()) + ")";
   }
 
   private List<String> scopeSort(List<String> assignments) {
@@ -108,7 +111,8 @@ public class DiscreteFactor implements Factor {
 
     this.cardinality = Lists.newArrayList(cardinality);
     this.rangeSize = this.getRangeSize(this.variables, this.cardinality);
-    this.size = this.rangeSize.get(this.variables.get(0)) * this.cardinality.get(0);
+    this.size = this.cardinality.stream()
+      .reduce(1, (a, b) -> a * b);
     this.assignmentToIdx = this.createAssignments(this.variables,
         this.cardinality,
         this.rangeSize,
@@ -189,9 +193,14 @@ public class DiscreteFactor implements Factor {
       }
     }
 
-    List<Integer> newCardinality = this.getCardinality();
-    rVars.stream()
-        .forEach(v -> newCardinality.set(this.variables.indexOf(v), 1));
+    List<String> newScope = this.getScope().stream()
+        .filter(v -> !rVars.contains(v))
+        .collect(Collectors.toList());
+
+    List<Integer> newCardinality = newScope.stream()
+        .mapToInt(v -> this.getCardinality().get(this.variables.indexOf(v)))
+        .boxed()
+        .collect(Collectors.toList());
 
     double[] newValues = reducedIdxs.stream()
         .sorted()
@@ -199,7 +208,8 @@ public class DiscreteFactor implements Factor {
         .toArray();
 
     DiscreteFactor result = inPlace ? this : (DiscreteFactor)this.copy();
-    result.setVariables(this.getScope());
+
+    result.setVariables(newScope);
     result.setCardinality(newCardinality);
     result.setValues(newValues);
 

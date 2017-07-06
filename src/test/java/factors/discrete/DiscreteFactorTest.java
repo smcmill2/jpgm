@@ -57,6 +57,12 @@ class DiscreteFactorTest {
     Assertions.assertTrue(expectedStr.equals(discreteFactor.toString()));
   }
 
+  @Test void testFactorString() {
+    String expectedStr = "\u03C6(I,D,G)";
+
+    Assertions.assertTrue(expectedStr.equals(discreteFactor.factorString()));
+  }
+
   @Test void testValidFactor() {
     List<String> tooFewVars = Lists.newArrayList("I", "D");
     List<Integer> tooManyCard = Lists.newArrayList(2, 2, 3, 4);
@@ -87,15 +93,16 @@ class DiscreteFactorTest {
   }
 
   @Test void testReduce() {
-    double[] iReduction = new double[]{0.252, 0.0224, 0.0056, 0.06, 0.036, 0.024};
+    double[] iReduction = new double[]{0.126, 0.168, 0.126,
+      0.009, 0.045, 0.126};
     List<Pair<String, Integer>> reduceList = new ArrayList<>();
-    reduceList.add(Pair.of("I", 1));
+    reduceList.add(Pair.of("I", 0));
 
     Factor factor = discreteFactor.reduce(reduceList, false);
 
     // Check new factor is reduced version
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), factor.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), ((DiscreteFactor)factor).getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), ((DiscreteFactor)factor).getCardinality()));
     Assertions.assertArrayEquals(iReduction, ((DiscreteFactor)factor).values, threshold);
     // Check existing factor has not changed
     Assertions.assertTrue(Iterables.elementsEqual(variables, discreteFactor.getScope()));
@@ -104,9 +111,22 @@ class DiscreteFactorTest {
 
     discreteFactor.reduce(reduceList, true);
 
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), discreteFactor.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(1, 2, 3), discreteFactor.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), discreteFactor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), discreteFactor.getCardinality()));
     Assertions.assertArrayEquals(iReduction, discreteFactor.values, threshold);
+  }
+
+  @Test void testReduceSingleVariable() {
+    double[] expected = new double[]{1.0};
+
+    DiscreteFactor singleVar = new DiscreteFactor(Lists.newArrayList("I"),
+        Lists.newArrayList(2), new double[]{0.7, 0.3});
+
+    singleVar.reduce(Lists.newArrayList(Pair.of("I", 1)), true);
+
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(), singleVar.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(), singleVar.getCardinality()));
+    Assertions.assertArrayEquals(new double[]{0.3}, singleVar.values);
   }
 
   @Test void testMultipleReduction() {
@@ -118,8 +138,8 @@ class DiscreteFactorTest {
     Factor factor = discreteFactor.reduce(reduceList, false);
 
     // Check new factor is reduced version
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), factor.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 1, 1), ((DiscreteFactor)factor).getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I"), factor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2), ((DiscreteFactor)factor).getCardinality()));
     Assertions.assertArrayEquals(dgReduction, ((DiscreteFactor)factor).values, threshold);
     // Check existing factor has not changed
     Assertions.assertTrue(Iterables.elementsEqual(variables, discreteFactor.getScope()));
@@ -128,8 +148,8 @@ class DiscreteFactorTest {
 
     discreteFactor.reduce(reduceList, true);
 
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I", "D", "G"), discreteFactor.getScope()));
-    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 1, 1), discreteFactor.getCardinality()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I"), discreteFactor.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2), discreteFactor.getCardinality()));
     Assertions.assertArrayEquals(dgReduction, discreteFactor.values, threshold);
   }
 
