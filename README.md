@@ -23,11 +23,11 @@ A Java library for Probabilistic Graphical Models
 - Inference
     - [ ] Variable Elimination
         - [x] Elimination ordering
-        - [ ] Sum-Product
+        - [x] Sum-Product
         - [ ] Max-Product
 - Toy Examples
     - Student example
-        - [ ] Showcase current features for 1.0.0
+        - [x] Showcase current features for 1.0.0
 - Documentation
     - [ ] Fully document all classes
 - Testing
@@ -38,7 +38,7 @@ A Java library for Probabilistic Graphical Models
 ### 1.1.0
 - Implement Discrete Factor Representation
     - Base Class
-        - [ ] String Representations
+        - [x] String Representations
         - [x] inplace operations
     - Joint Probability Distribution
         - [ ] i-map of a network

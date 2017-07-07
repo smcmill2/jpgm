@@ -7,10 +7,10 @@ import inference.exact.VariableElimination;
 import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 /**
+ * https://www.cs.utexas.edu/~mooney/cs343/slide-handouts/bayes-nets.pdf
  * Created by smcmillan on 7/7/17.
  */
 public class Burglary {
