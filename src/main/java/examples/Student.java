@@ -8,6 +8,9 @@ import inference.exact.VariableElimination;
 import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * A toy class to demonstrate the basic capabilities of inference using
  * discrete factors and a Bayesian network.
@@ -50,42 +53,38 @@ public class Student {
     return network;
   }
 
-  public void StudentAcesSAT(BayesianNetwork model) {
-
-  }
-
   public static void main(String[] args) {
-    // @todo Flesh out the class
     System.out.println("A toy class for demonstrating inference");
 
     BayesianNetwork model = basicStudentBN();
-    DiscreteFactor jpt = model.getCPDs().stream()
-        .map(cpd -> cpd.toDiscreteFactor())
-        .reduce(new DiscreteFactor(), (a, b) -> a.product(b));
-    jpt.normalize(true);
-
     Inference ve = new VariableElimination(model);
-    //System.out.println(ve.queryFactor(Lists.newArrayList("L")));
-    DiscreteFactor f;
-    f = ve.queryFactor(Lists.newArrayList("I"),
-        Lists.newArrayList(Pair.of("G", 0)));
+    List<Pair<String, Integer>> qVars = Lists.newArrayList();
 
-    System.out.println(f.toString());
-    System.out.println(f.getValue(Pair.of("I", 1)));
+    System.out.println("Probability class is difficult:");
+    qVars = Lists.newArrayList(Pair.of("D", 1));
+    System.out.println(String.format("P(d=1): %f", ve.query(qVars)));
+    System.out.println("Probability student is intelligent:");
+    qVars = Lists.newArrayList(Pair.of("I", 1));
+    System.out.println(String.format("P(i=1): %f", ve.query(qVars)));
 
-    f = ve.queryFactor(Lists.newArrayList("I"),
-        Lists.newArrayList(Pair.of("D", 1),
-            Pair.of("G", 0)));
+    System.out.println("Student gets a C");
+    List<Pair<String, Integer>> evidence = Lists.newArrayList(Pair.of("G", 2));
 
-    System.out.println(f.toString());
-    System.out.println(f.getValue(Pair.of("I", 1)));
+    System.out.println("Probability class is difficult:");
+    qVars = Lists.newArrayList(Pair.of("D", 1));
+    System.out.println(String.format("P(d=1|g=2): %f", ve.query(qVars, evidence)));
+    System.out.println("Probability student is intelligent:");
+    qVars = Lists.newArrayList(Pair.of("I", 1));
+    System.out.println(String.format("P(i=1|g=2): %f", ve.query(qVars, evidence)));
 
-    f = ve.queryFactor(Lists.newArrayList("D"),
-        Lists.newArrayList(Pair.of("S", 1),
-            Pair.of("G", 2)));
+    System.out.println("Student Aced the SAT");
+    evidence.add(Pair.of("S", 1));
 
-    System.out.println(f.toString());
-    System.out.println(f.getValue(Pair.of("D", 1)));
-    System.out.println(jpt.getValue(Pair.of("D", 1)));
+    System.out.println("Probability class is difficult:");
+    qVars = Lists.newArrayList(Pair.of("D", 1));
+    System.out.println(String.format("P(d=1|g=2,s=1): %f", ve.query(qVars, evidence)));
+    System.out.println("Probability student is intelligent:");
+    qVars = Lists.newArrayList(Pair.of("I", 1));
+    System.out.println(String.format("P(i=1|g=2,s=1): %f", ve.query(qVars, evidence)));
   }
 }

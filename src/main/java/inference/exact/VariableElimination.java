@@ -27,7 +27,7 @@ public class VariableElimination implements Inference {
   }
 
   public double query(List<Pair<String, Integer>> variables) {
-    return query(variables, null);
+    return query(variables, Lists.newArrayList());
   }
 
   @Override public double query(List<Pair<String, Integer>> variables,
@@ -42,7 +42,7 @@ public class VariableElimination implements Inference {
   }
 
   public DiscreteFactor queryFactor(List<String> variables) {
-    DiscreteFactor f = this.queryModel(this.model, variables, null);
+    DiscreteFactor f = this.queryModel(this.model, variables, Lists.newArrayList());
     return f;
   }
 
@@ -51,17 +51,6 @@ public class VariableElimination implements Inference {
 
     return f;
   }
-
-  /*
-  public double queryFactor(List<Pair<String, Integer>> variables, List<Pair<String, Integer>> evidence) {
-    DiscreteFactor f = this.queryModel(this.model, variables.stream()
-        .map(pair -> pair.getLeft()).collect(Collectors.toList()), evidence);
-
-    return variables.stream()
-        .mapToDouble(v -> f.getValue(v))
-        .reduce(1.0, (a, b) -> a * b);
-  }
-  */
 
   private DiscreteFactor queryModel(BayesianNetwork model, List<String> variables,
       List<Pair<String, Integer>> evidence) {
@@ -81,9 +70,14 @@ public class VariableElimination implements Inference {
       factorMap.put(f.factorString(), f);
     }
 
-    Set<String> notX = Sets.union(Sets.newHashSet(variables),
-        Sets.newHashSet(evidence.stream().map(e -> e.getLeft()).collect(
-            Collectors.toList())));
+    Set<String> notX = Sets.newHashSet(variables);
+    if(evidence != null) {
+      notX = Sets.union(notX, Sets.newHashSet(evidence.stream()
+          .map(e -> e.getLeft())
+          .collect(Collectors.toList())
+      ));
+    }
+
     eliminationOrder.removeAll(notX);  // Factor into order creation
 
     // Instantiate Observed Evidence

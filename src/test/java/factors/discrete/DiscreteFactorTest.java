@@ -257,15 +257,15 @@ class DiscreteFactorTest {
     DiscreteFactor y = new DiscreteFactor(
         Lists.newArrayList("Y"),
         Lists.newArrayList(2),
-        new double[]{0.5, 0.5}
+        new double[]{0.5, 0.4}
     );
     DiscreteFactor expected = new DiscreteFactor(
         Lists.newArrayList("X", "Y"),
         Lists.newArrayList(3, 2),
         new double[]{
-            0.35, 0.35,
-            0.10, 0.10,
-            0.05, 0.05
+            0.35, 0.28,
+            0.10, 0.08,
+            0.05, 0.04
         }
     );
 
