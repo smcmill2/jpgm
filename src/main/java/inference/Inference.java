@@ -15,8 +15,11 @@ import java.util.List;
  */
 public interface Inference {
   double threshold = 10e-8;
-  DiscreteFactor query(List<String> variables);
-  DiscreteFactor query(List<String> variables, List<Pair<String, Integer>> evidence);
+  double query(List<Pair<String, Integer>> variables);
+  double query(List<Pair<String, Integer>> variables, List<Pair<String, Integer>> evidence);
+  DiscreteFactor queryFactor(List<String> variables);
+  DiscreteFactor queryFactor(List<String> variables, List<Pair<String, Integer>> evidence);
+
   String mapQuery(List<String> variables);
   String mapQuery(List<String> variables, List<Pair<String, Integer>> evidence);
 }

@@ -23,6 +23,13 @@ public interface Factor {
   String toString();
 
   /**
+   * Return a string representation of the represented factor.
+   *
+   * @return
+   */
+  String factorString();
+
+  /**
    * Return the scope of the factor
    *
    * @return the array of the variables for the factor

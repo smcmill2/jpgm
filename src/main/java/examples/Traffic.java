@@ -44,13 +44,13 @@ public class Traffic {
 
     BayesianNetwork model = trafficBN();
     Inference ve = new VariableElimination(model);
-    //System.out.println(ve.query(Lists.newArrayList("L")));
+    //System.out.println(ve.queryFactor(Lists.newArrayList("L")));
     /*
-    System.out.println(ve.query(Lists.newArrayList("L"),
+    System.out.println(ve.queryFactor(Lists.newArrayList("L"),
         Lists.newArrayList(Pair.of("G", 1)))
     );
     */
-    System.out.println(ve.query(Lists.newArrayList("A"),
+    System.out.println(ve.queryFactor(Lists.newArrayList("A"),
         Lists.newArrayList(Pair.of("T", 1))));
   }
 }

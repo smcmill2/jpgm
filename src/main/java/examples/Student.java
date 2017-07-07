@@ -47,18 +47,11 @@ public class Student {
     network.addEdge(intelligence, sat);
     network.addEdge(grade, letter);
 
-    /*
-    System.out.println(difficulty.toString());
-    System.out.println(intelligence.toString());
-    System.out.println(grade.toString());
-    */
-
-    System.out.println(
-        grade.toDiscreteFactor().reduce(Lists.newArrayList(Pair.of("G", 2)), false).normalize(false).toString());
-
-    System.out.println(difficulty.product(intelligence).product(grade).normalize(false).toString());
-
     return network;
+  }
+
+  public void StudentAcesSAT(BayesianNetwork model) {
+
   }
 
   public static void main(String[] args) {
@@ -66,18 +59,33 @@ public class Student {
     System.out.println("A toy class for demonstrating inference");
 
     BayesianNetwork model = basicStudentBN();
-    Inference ve = new VariableElimination(model);
-    //System.out.println(ve.query(Lists.newArrayList("L")));
-    DiscreteFactor f;
-    f = ve.query(Lists.newArrayList("L"),
-        Lists.newArrayList(Pair.of("G", 2)));
+    DiscreteFactor jpt = model.getCPDs().stream()
+        .map(cpd -> cpd.toDiscreteFactor())
+        .reduce(new DiscreteFactor(), (a, b) -> a.product(b));
+    jpt.normalize(true);
 
+    Inference ve = new VariableElimination(model);
+    //System.out.println(ve.queryFactor(Lists.newArrayList("L")));
+    DiscreteFactor f;
+    f = ve.queryFactor(Lists.newArrayList("I"),
+        Lists.newArrayList(Pair.of("G", 0)));
+
+    System.out.println(f.toString());
     System.out.println(f.getValue(Pair.of("I", 1)));
 
-    f = ve.query(Lists.newArrayList("I"),
+    f = ve.queryFactor(Lists.newArrayList("I"),
         Lists.newArrayList(Pair.of("D", 1),
             Pair.of("G", 0)));
 
+    System.out.println(f.toString());
     System.out.println(f.getValue(Pair.of("I", 1)));
+
+    f = ve.queryFactor(Lists.newArrayList("D"),
+        Lists.newArrayList(Pair.of("S", 1),
+            Pair.of("G", 2)));
+
+    System.out.println(f.toString());
+    System.out.println(f.getValue(Pair.of("D", 1)));
+    System.out.println(jpt.getValue(Pair.of("D", 1)));
   }
 }

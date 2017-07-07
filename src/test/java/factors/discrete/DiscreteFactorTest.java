@@ -61,10 +61,19 @@ class DiscreteFactorTest {
     Assertions.assertTrue(expectedStr.equals(discreteFactor.toString()));
   }
 
+  /**
+   * TODO Add checks for marginalization/products/etc.
+   */
   @Test void testFactorString() {
     String expectedStr = "\u03C6(I,D,G)";
+    String expectedReducedFactorString = "\u03C6(D | I=1,G=2)";
+    Factor reducedFactor = discreteFactor.reduce(
+        Lists.newArrayList(Pair.of("I",1), Pair.of("G", 2)),
+        false);
 
     Assertions.assertTrue(expectedStr.equals(discreteFactor.factorString()));
+    Assertions.assertTrue(expectedReducedFactorString.equals(reducedFactor.factorString()));
+
   }
 
   @Test void testValidFactor() {

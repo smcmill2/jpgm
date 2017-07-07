@@ -36,6 +36,8 @@ public class DiscreteFactor implements Factor {
   protected double[] values;
   private int size;
 
+  private List<Pair<String, Integer>> reductions;
+
   private ListMultimap<String, Integer> assignmentToIdx;
   private Map<String, Integer> rangeSize;
 
@@ -49,6 +51,8 @@ public class DiscreteFactor implements Factor {
     this.setVariables(variables);
     this.setCardinality(cardinality);
     this.setValues(values);
+
+    this.reductions = new ArrayList<>();
   }
 
   public String toString() {
@@ -74,7 +78,15 @@ public class DiscreteFactor implements Factor {
   }
 
   public String factorString() {
-    return "\u03C6(" + Joiner.on(",").join(this.getScope()) + ")";
+    String fString = "\u03C6(" + Joiner.on(",").join(this.getScope());
+
+    if(this.reductions.size() > 0) {
+      fString = fString.concat(" | " +
+        Joiner.on(",").join(this.reductions.stream()
+            .map(r -> Misc.joinPair(r, "="))
+            .collect(Collectors.toList())));
+    }
+    return fString.concat(")");
   }
 
   private List<String> scopeSort(List<String> assignments) {
@@ -93,8 +105,11 @@ public class DiscreteFactor implements Factor {
   }
 
   public Factor copy() {
-    return new DiscreteFactor(this.getScope(), this.getCardinality(),
+    DiscreteFactor df = new DiscreteFactor(this.getScope(), this.getCardinality(),
         this.values);
+    df.reductions = Lists.newArrayList(this.reductions);
+
+    return df;
   }
 
   public boolean equals(DiscreteFactor other) {
@@ -229,6 +244,7 @@ public class DiscreteFactor implements Factor {
     result.setVariables(newScope);
     result.setCardinality(newCardinality);
     result.setValues(newValues);
+    result.reductions.addAll(variables);
 
     return result;
   }
@@ -333,6 +349,11 @@ public class DiscreteFactor implements Factor {
     }
 
     result.setValues(newValues);
+
+    Set<Pair<String, Integer>> reductions =
+        Sets.union(Sets.newHashSet(result.reductions),
+            Sets.newHashSet(other.reductions));
+    result.reductions = Lists.newArrayList(reductions);
 
     return result;
   }

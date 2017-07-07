@@ -26,19 +26,34 @@ public class VariableElimination implements Inference {
     this.model = model;
   }
 
-  @Override public DiscreteFactor query(List<String> variables) {
+  public double query(List<Pair<String, Integer>> variables) {
+    return query(variables, null);
+  }
+
+  @Override public double query(List<Pair<String, Integer>> variables,
+      List<Pair<String, Integer>> evidence) {
+    DiscreteFactor f = queryFactor(variables.stream()
+        .map(Pair::getLeft)
+        .collect(Collectors.toList()), evidence);
+
+    return variables.stream()
+        .mapToDouble(v -> f.getValue(v))
+        .reduce(1.0, (a, b) -> a * b);
+  }
+
+  public DiscreteFactor queryFactor(List<String> variables) {
     DiscreteFactor f = this.queryModel(this.model, variables, null);
     return f;
   }
 
-  @Override public DiscreteFactor query(List<String> variables, List<Pair<String, Integer>> evidence) {
+  public DiscreteFactor queryFactor(List<String> variables, List<Pair<String, Integer>> evidence) {
     DiscreteFactor f = this.queryModel(this.model, variables, evidence);
 
     return f;
   }
 
   /*
-  public double query(List<Pair<String, Integer>> variables, List<Pair<String, Integer>> evidence) {
+  public double queryFactor(List<Pair<String, Integer>> variables, List<Pair<String, Integer>> evidence) {
     DiscreteFactor f = this.queryModel(this.model, variables.stream()
         .map(pair -> pair.getLeft()).collect(Collectors.toList()), evidence);
 
@@ -61,9 +76,9 @@ public class VariableElimination implements Inference {
     for(ConditionalProbabilityDistribution cpd : model.getCPDs()) {
       Factor f = cpd.toDiscreteFactor();
       for(String v : cpd.getScope()) {
-        factors.put(v, ((DiscreteFactor) f).factorString());
+        factors.put(v, f.factorString());
       }
-      factorMap.put(((DiscreteFactor)f).factorString(), f);
+      factorMap.put(f.factorString(), f);
     }
 
     Set<String> notX = Sets.union(Sets.newHashSet(variables),
@@ -79,38 +94,30 @@ public class VariableElimination implements Inference {
         Factor f = factorMap.get(o);
         Factor reducedFactor = f.reduce(Lists.newArrayList(e), false);
 
-        String factorString = o;
-        List<String> fStrList = Lists.newArrayList(Splitter.on(")").splitToList(factorString));
-        fStrList.set(fStrList.size()-1,
-            String.format("%s)", Misc.joinPair(e, "=")));
-        if(factorString.contains("|")) {
-          factorString = Joiner.on(",").join(fStrList);
-        } else {
-          factorString = Joiner.on(" | ").join(fStrList);
-        }
-
         factors = HashMultimap.create(Multimaps.filterEntries(factors,
           entry -> !(entry.getKey().equals(e.getLeft()) || entry.getValue().equals(o))));
 
         for(String v : reducedFactor.getScope()) {
-          factors.put(v, factorString);
+          factors.put(v, reducedFactor.factorString());
         }
 
         factorMap.remove(o);
-        factorMap.put(factorString, reducedFactor);
+        factorMap.put(reducedFactor.factorString(), reducedFactor);
       }
     }
 
     // Eliminate variables in Z
     for(String Z : eliminationOrder) {
-      System.out.println(String.format("Sum-Out(%s)\n", Z));
+      //System.out.println(String.format("Sum-Out(%s)\n", Z));
       // Sum Out Z from all containing factors
       Set<String> containingFactors = factors.get(Z);
 
-      System.out.println(String.format("Containing Factors:\n"));
+      //System.out.println(String.format("Containing Factors:\n"));
+      /*
       containingFactors.stream()
           .forEach(f -> System.out.println(factorMap.get(f).toString()));
-      System.out.println("\n");
+      */
+      //System.out.println("\n");
       Factor newFactor = containingFactors.stream()
           .map(factorMap::get)
           .reduce(new DiscreteFactor(),
@@ -125,11 +132,11 @@ public class VariableElimination implements Inference {
 
       // Add the new factor
       for(String v : newFactor.getScope()) {
-        factors.put(v, ((DiscreteFactor)newFactor).factorString());
+        factors.put(v, newFactor.factorString());
       }
-      factorMap.put(((DiscreteFactor)newFactor).factorString(), newFactor);
+      factorMap.put(newFactor.factorString(), newFactor);
 
-      System.out.println(String.format("Adding New Factor: %s\n", newFactor.toString()));
+      //System.out.println(String.format("Adding New Factor:\n %s", newFactor.toString()));
     }
 
     // Return product of remaining factors and normalize

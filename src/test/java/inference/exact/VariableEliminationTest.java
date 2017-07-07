@@ -8,9 +8,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
 
 class VariableEliminationTest {
   double threshold = 10e-4;
@@ -40,15 +37,14 @@ class VariableEliminationTest {
   }
 
   @Test void testQuery() {
-    DiscreteFactor f;
-    f = ve.query(Lists.newArrayList("A"),
+    double a1Prob = ve.query(Lists.newArrayList(Pair.of("A", 1)),
         Lists.newArrayList(Pair.of("T", 1)));
-    Assertions.assertEquals(0.348, f.getValue(Pair.of("A", 1)), threshold);
+    Assertions.assertEquals(0.348, a1Prob, threshold);
 
-    f = ve.query(Lists.newArrayList("A"),
+    a1Prob = ve.query(Lists.newArrayList(Pair.of("A", 1)),
     Lists.newArrayList(Pair.of("T", 1),
         Pair.of("P", 1)));
-    Assertions.assertEquals(0.143, f.getValue(Pair.of("A", 1)), threshold);
+    Assertions.assertEquals(0.143, a1Prob, threshold);
   }
 
   @Test void testQuery2() {
