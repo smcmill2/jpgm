@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class ConditionalProbabilityDistributionTest {
@@ -31,6 +32,36 @@ class ConditionalProbabilityDistributionTest {
 
   @BeforeEach void setUp() {
     cpd = new ConditionalProbabilityDistribution("G", 3, evidence, eCardinality, expectedTable);
+  }
+
+  @Test void testCreation() {
+    double[][] values = new double[][]{
+        {0.90, 0.20},
+        {0.10, 0.80}
+    };
+
+    // Not deep copying?
+    //double[][] expected = new doubleArrays.copyOf(values, values.length);
+    double[][] expected = new double[][]{
+        {0.90, 0.20},
+        {0.10, 0.80}
+    };
+
+    ConditionalProbabilityDistribution cpd = new ConditionalProbabilityDistribution(
+        "x2", 2,
+        Lists.newArrayList("x1"),
+        Lists.newArrayList(2),
+        values
+    );
+
+    Assertions.assertTrue(cpd.getVariable().equals("x2"));
+    Assertions.assertEquals(cpd.getVariableCardinality(), 2);
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("x1", "x2"), cpd.getScope()));
+    Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 2), cpd.getCardinality()));
+    for(int r = 0;r < expected.length;++r) {
+      Assertions.assertArrayEquals(expected[r],
+          cpd.getValues()[r], threshold);
+    }
   }
 
   @Test void testCopy() {

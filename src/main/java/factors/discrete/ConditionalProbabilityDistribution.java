@@ -168,28 +168,14 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
    * @return
    */
   private static double[][] transpose(double[][] values) {
-    if(values.length == values[0].length) {
-      double tmp;
+    double[][] transposed = new double[values[0].length][values.length];
 
-      for (int i = 0; i < values.length / 2 + 1; ++i) {
-        for (int j = i; j < values[0].length; ++j) {
-          tmp = values[i][j];
-          values[j][i] = values[i][j];
-          values[i][j] = tmp;
-        }
+    for (int i = 0; i < values.length; ++i) {
+      for (int j = 0; j < values[0].length; ++j) {
+        transposed[j][i] = values[i][j];
       }
-    } else {
-      double[][] transposed = new double[values[0].length][values.length];
-
-      for (int i = 0; i < values.length; ++i) {
-        for (int j = 0; j < values[0].length; ++j) {
-          transposed[j][i] = values[i][j];
-        }
-      }
-
-      values = transposed;
     }
 
-    return values;
+    return transposed;
   }
 }
