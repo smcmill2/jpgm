@@ -49,8 +49,8 @@ public class Traffic {
     System.out.println(ve.queryFactor(Lists.newArrayList("L"),
         Lists.newArrayList(Pair.of("G", 1)))
     );
-    */
     System.out.println(ve.queryFactor(Lists.newArrayList("A"),
         Lists.newArrayList(Pair.of("T", 1))));
+        */
   }
 }

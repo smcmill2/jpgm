@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 import util.ListOps;
 
 import java.util.Arrays;
@@ -148,7 +149,7 @@ public class ConditionalProbabilityDistribution extends DiscreteFactor {
     return result;
   }
 
-  @Override public Factor reduce(List<Pair<String, Integer>> variables,
+  @Override public Factor reduce(List<Event> variables,
       boolean inPlace) {
     Factor factor = super.reduce(variables, inPlace);
     ((ConditionalProbabilityDistribution)factor).vCard =

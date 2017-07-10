@@ -67,12 +67,14 @@ public class Burglary {
     List<Pair<String, Integer>> qVars = Lists.newArrayList();
     List<Pair<String, Integer>> evidence = Lists.newArrayList();
 
+    /*
     System.out.println("Diagnostic Inference");
     qVars = Lists.newArrayList(Pair.of("B", 1));
     evidence = Lists.newArrayList(Pair.of("J", 1));
     System.out.println(String.format("P(B=1|J=1): %f", ve.query(qVars, evidence)));
     evidence.add(Pair.of("M", 1));
     System.out.println(String.format("P(B=1|J=1,M=1): %f", ve.query(qVars, evidence)));
+    */
 
   }
 }

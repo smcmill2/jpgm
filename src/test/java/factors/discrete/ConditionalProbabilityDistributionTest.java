@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import primitives.EventStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,11 +118,9 @@ class ConditionalProbabilityDistributionTest {
         {0.02}
     };
 
-    List<Pair<String, Integer>> reduction = new ArrayList<>();
-    reduction.add(Pair.of("D", 0));
-    reduction.add(Pair.of("I", 1));
+    EventStream reduction = new EventStream("D=0,I=1");
 
-    Factor factor = cpd.reduce(reduction, false);
+    Factor factor = cpd.reduce(reduction.getEvents(), false);
     // Check new factor is reduced version
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("G"), factor.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(3),
@@ -139,7 +138,7 @@ class ConditionalProbabilityDistributionTest {
           cpd.getValues()[r], threshold);
     }
 
-    cpd.reduce(reduction, true);
+    cpd.reduce(reduction.getEvents(), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "G"), cpd.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( 3), cpd.getCardinality()));

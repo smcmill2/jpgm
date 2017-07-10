@@ -1,6 +1,7 @@
 package factors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 
 import java.util.List;
 
@@ -48,12 +49,12 @@ public interface Factor {
   /**
    * Reduce the factor by the specified variables, removing them from the scope.
    *
-   * @param variables the list of variable, assignment pairs to reduce to
+   * @param events the list of events to reduce to
    * @param inPlace whether to reduce in place or return a new factor object
    *                that has been reduced.
    * @return the reduced dst factor or a copy.
    */
-  Factor reduce(List<Pair<String, Integer>> variables, boolean inPlace);
+  Factor reduce(List<Event> events, boolean inPlace);
 
   /**
    * Marginalize the factor with respect to the specified variables

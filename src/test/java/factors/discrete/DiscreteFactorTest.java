@@ -4,12 +4,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import factors.Factor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import primitives.EventStream;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -64,8 +63,7 @@ class DiscreteFactorTest {
     String expectedStr = "\u03C6(I,D,G)";
     String expectedReducedFactorString = "\u03C6(D | I=1,G=2)";
     Factor reducedFactor = discreteFactor.reduce(
-        Lists.newArrayList(Pair.of("I",1), Pair.of("G", 2)),
-        false);
+        new EventStream("I=1,G=2").getEvents(), false);
 
     Assertions.assertTrue(expectedStr.equals(discreteFactor.factorString()));
     Assertions.assertTrue(expectedReducedFactorString.equals(reducedFactor.factorString()));
@@ -113,10 +111,11 @@ class DiscreteFactorTest {
   @Test void testReduce() {
     double[] iReduction = new double[]{0.126, 0.168, 0.126,
       0.009, 0.045, 0.126};
-    List<Pair<String, Integer>> reduceList = new ArrayList<>();
-    reduceList.add(Pair.of("I", 0));
 
-    Factor factor = discreteFactor.reduce(reduceList, false);
+    EventStream reduction = new EventStream("I=0");
+
+    Factor factor = discreteFactor.reduce(
+        reduction.getEvents(), false);
 
     // Check new factor is reduced version
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), factor.getScope()));
@@ -127,7 +126,7 @@ class DiscreteFactorTest {
     Assertions.assertTrue(Iterables.elementsEqual(cardinality, discreteFactor.getCardinality()));
     Assertions.assertArrayEquals(values, discreteFactor.values, threshold);
 
-    discreteFactor.reduce(reduceList, true);
+    discreteFactor.reduce(reduction.getEvents(), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("D", "G"), discreteFactor.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2, 3), discreteFactor.getCardinality()));
@@ -140,7 +139,9 @@ class DiscreteFactorTest {
     DiscreteFactor singleVar = new DiscreteFactor(Lists.newArrayList("I"),
         Lists.newArrayList(2), new double[]{0.7, 0.3});
 
-    singleVar.reduce(Lists.newArrayList(Pair.of("I", 1)), true);
+    EventStream reduction = new EventStream("I=1");
+
+    singleVar.reduce(reduction.getEvents(), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(), singleVar.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(), singleVar.getCardinality()));
@@ -149,11 +150,9 @@ class DiscreteFactorTest {
 
   @Test void testMultipleReduction() {
     double[] dgReduction = new double[]{0.126, 0.024};
-    List<Pair<String, Integer>> reduceList = new ArrayList<>();
-    reduceList.add(Pair.of("G", 2));
-    reduceList.add(Pair.of("D", 1));
 
-    Factor factor = discreteFactor.reduce(reduceList, false);
+    EventStream reduction = new EventStream("G=2,D=1");
+    Factor factor = discreteFactor.reduce(reduction.getEvents(), false);
 
     // Check new factor is reduced version
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I"), factor.getScope()));
@@ -164,7 +163,7 @@ class DiscreteFactorTest {
     Assertions.assertTrue(Iterables.elementsEqual(cardinality, discreteFactor.getCardinality()));
     Assertions.assertArrayEquals(values, discreteFactor.values, threshold);
 
-    discreteFactor.reduce(reduceList, true);
+    discreteFactor.reduce(reduction.getEvents(), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList("I"), discreteFactor.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList(2), discreteFactor.getCardinality()));

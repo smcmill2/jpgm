@@ -2,6 +2,7 @@ package primitives;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
@@ -36,5 +37,17 @@ public class Event {
 
   public boolean equals(Event other) {
     return this.toString().equals(other.toString());
+  }
+
+  public String getVariable() {
+    return this.variable;
+  }
+
+  public String getOutcome() {
+    return this.outcome;
+  }
+
+  public Pair<String, String> asPair() {
+    return Pair.of(this.variable, this.outcome);
   }
 }

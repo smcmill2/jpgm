@@ -56,6 +56,7 @@ public class Student {
   public static void main(String[] args) {
     System.out.println("A toy class for demonstrating inference");
 
+    /*
     BayesianNetwork model = basicStudentBN();
     Inference ve = new VariableElimination(model);
     List<Pair<String, Integer>> qVars = Lists.newArrayList();
@@ -86,5 +87,6 @@ public class Student {
     System.out.println("Probability student is intelligent:");
     qVars = Lists.newArrayList(Pair.of("I", 1));
     System.out.println(String.format("P(i=1|g=2,s=1): %f", ve.query(qVars, evidence)));
+    */
   }
 }

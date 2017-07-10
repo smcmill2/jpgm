@@ -8,6 +8,7 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 import util.ListOps;
 import util.Misc;
 
@@ -36,7 +37,8 @@ public class DiscreteFactor implements Factor {
   protected double[] values;
   private int size;
 
-  private List<Pair<String, Integer>> reductions;
+  private List<Event> reductions;
+  private Map<String, Integer> varCard;
 
   private ListMultimap<String, Integer> assignmentToIdx;
   private Map<String, Integer> rangeSize;
@@ -83,7 +85,7 @@ public class DiscreteFactor implements Factor {
     if(this.reductions.size() > 0) {
       fString = fString.concat(" | " +
         Joiner.on(",").join(this.reductions.stream()
-            .map(r -> Misc.joinPair(r, "="))
+            .map(Event::toString)
             .collect(Collectors.toList())));
     }
     return fString.concat(")");
@@ -192,8 +194,8 @@ public class DiscreteFactor implements Factor {
     return rangeSize;
   }
 
-  public double getValue(Pair<String, Integer> assignment) {
-    return this.assignmentToIdx.get(Misc.joinPair(assignment, "=")).stream()
+  public double getValue(Event event) {
+    return this.assignmentToIdx.get(event.toString()).stream()
         .mapToDouble(idx -> this.values[idx]).sum();
   }
 
@@ -207,20 +209,19 @@ public class DiscreteFactor implements Factor {
   }
 
   // TODO when reducing set new factorString value
-  @Override public Factor reduce(List<Pair<String, Integer>> variables,
+  @Override public Factor reduce(List<Event> events,
       boolean inPlace) {
     HashSet<String> rVars = new HashSet<>();
     HashSet<Integer> rVarIdxs = new HashSet<>();
     HashSet reducedIdxs = new HashSet();
     reducedIdxs.addAll(IntStream.range(0, this.size).boxed().collect(Collectors.toList()));
-    for(Pair<String, Integer> varAss : variables) {
-      String variable = varAss.getLeft();
-      String assignment = joinPair(varAss, "=");
+    for(Event event : events) {
+      String variable = event.getVariable();
       int vIdx = this.variables.indexOf(variable);
 
       rVars.add(variable);
       rVarIdxs.add(vIdx);
-      List<Integer> assignedIdxs = this.assignmentToIdx.get(assignment);
+      List<Integer> assignedIdxs = this.assignmentToIdx.get(event.toString());
       reducedIdxs.retainAll(Sets.intersection(reducedIdxs,
           Sets.newHashSet(assignedIdxs)));
     }
@@ -244,7 +245,7 @@ public class DiscreteFactor implements Factor {
     result.setVariables(newScope);
     result.setCardinality(newCardinality);
     result.setValues(newValues);
-    result.reductions.addAll(variables);
+    result.reductions.addAll(events);
 
     return result;
   }
@@ -350,7 +351,7 @@ public class DiscreteFactor implements Factor {
 
     result.setValues(newValues);
 
-    Set<Pair<String, Integer>> reductions =
+    Set<Event> reductions =
         Sets.union(Sets.newHashSet(result.reductions),
             Sets.newHashSet(other.reductions));
     result.reductions = Lists.newArrayList(reductions);

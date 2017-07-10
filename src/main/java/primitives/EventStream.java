@@ -3,6 +3,8 @@ package primitives;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +42,27 @@ public class EventStream {
         .splitToList(stream).stream()
         .map(e -> new Event(e)).collect(Collectors.toList());
   }
+
+  public List<Event> getEvents() {
+    return Lists.newArrayList(this.events);
+  }
+
+  public List<Pair<String, String>> getEventPairs() {
+    return this.events.stream()
+        .map(Event::asPair)
+        .collect(Collectors.toList());
+  }
+
+  public List<Event> getObservations() {
+    return Lists.newArrayList(this.observations);
+  }
+
+  public List<Pair<String, String>> getObservedPairs() {
+    return this.observations.stream()
+        .map(Event::asPair)
+        .collect(Collectors.toList());
+  }
+
 
   @Override public String toString() {
     return Joiner.on("|")

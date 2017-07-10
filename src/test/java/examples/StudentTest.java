@@ -8,6 +8,7 @@ import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import primitives.EventStream;
 
 import java.util.List;
 
@@ -33,27 +34,21 @@ class StudentTest {
      * Class is hard, student gets a C
      *
      */
-    List<Pair<String, Integer>> qVar = Lists.newArrayList(Pair.of("I", 1));
-    List<Pair<String, Integer>> evidence = Lists.newArrayList(
-        Pair.of("D", 1),
-        Pair.of("G", 1)
-    );
 
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, qVar, evidence),
+    EventStream query = new EventStream("I=1|D=1,G=1");
+
+    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
         "P(I_1): 0.3 -> ~0.11, Actually getting 0.096");
 
     /**
      * Student Aces the SAT and gets a C
      */
-    evidence = Lists.newArrayList(
-        Pair.of("G", 2)
-    );
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, qVar, evidence),
+    query = new EventStream("D=1|G=2");
+    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
         "Class is difficult, P(D_1): 0.4 -> ~0.63");
 
-    evidence.add(Pair.of("S", 1));
-    qVar = Lists.newArrayList(Pair.of("I", 1));
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, qVar, evidence),
+    query = new EventStream("I=1|S=1");
+    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
         "Student is intelligent, P(I_1): 0.3 -> ~0.58");
 
   }
