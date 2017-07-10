@@ -13,6 +13,7 @@ import factors.discrete.DiscreteFactor;
 import inference.Inference;
 import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 import util.Misc;
 
 import javax.annotation.Nullable;
@@ -28,6 +29,11 @@ public class VariableElimination implements Inference {
 
   public double query(List<Pair<String, Integer>> variables) {
     return query(variables, Lists.newArrayList());
+  }
+
+  @Override public double query(String queryString) {
+    //return query(Event(queryString));
+    return 0.0;
   }
 
   @Override public double query(List<Pair<String, Integer>> variables,

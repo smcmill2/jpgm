@@ -15,37 +15,84 @@ import java.util.List;
 
 import static util.TestUtils.JPTEqualsVE;
 
+/**
+ * All inference query example numbers taken from:
+ * https://www.cs.utexas.edu/~mooney/cs343/slide-handouts/bayes-nets.pdf
+ */
 class VariableEliminationTest {
   double threshold = 10e-4;
   VariableElimination ve;
   BayesianNetwork bn;
-  ConditionalProbabilityDistribution P;
-  ConditionalProbabilityDistribution A;
-  ConditionalProbabilityDistribution T;
-
   Factor jpt;
 
   @BeforeEach void setUp() {
-    P = new ConditionalProbabilityDistribution("P", 2,
-        new double[][]{{0.99}, {0.01}});
-    A = new ConditionalProbabilityDistribution("A", 2,
-        new double[][]{{0.9}, {0.1}});
-    T = new ConditionalProbabilityDistribution("T", 2,
-        Lists.newArrayList("P", "A"),
+    ConditionalProbabilityDistribution burglary = new ConditionalProbabilityDistribution(
+        "B", 2, new double[][]{{0.999}, {0.001}}
+    );
+    ConditionalProbabilityDistribution earthquake = new ConditionalProbabilityDistribution(
+        "E", 2, new double[][]{{0.998}, {0.002}}
+    );
+    ConditionalProbabilityDistribution alarm = new ConditionalProbabilityDistribution(
+        "A", 2,
+        Lists.newArrayList("B", "E"),
         Lists.newArrayList(2, 2),
+        new double[][] { { 0.999, 0.71, 0.06, 0.05 },
+            { 0.001, 0.29, 0.94, 0.95 } }
+    );
+    ConditionalProbabilityDistribution johnCalls = new ConditionalProbabilityDistribution(
+        "J", 2,
+        Lists.newArrayList("A"),
+        Lists.newArrayList(2),
         new double[][]{
-            {0.9, 0.5, 0.4, 0.1},
-            {0.1, 0.5, 0.6, 0.9}
-        });
+            {0.95, 0.10},
+            {0.05, 0.90}
+        }
+    );
+    ConditionalProbabilityDistribution maryCalls = new ConditionalProbabilityDistribution(
+        "M", 2,
+        Lists.newArrayList("A"),
+        Lists.newArrayList(2),
+        new double[][]{
+            {0.99, 0.30},
+            {0.01, 0.70}
+        }
+    );
 
     bn = new BayesianNetwork();
-    bn.addEdge(P, T);
-    bn.addEdge(A, T);
+    bn.addEdge(burglary, alarm);
+    bn.addEdge(earthquake, alarm);
+    bn.addEdge(alarm, johnCalls);
+    bn.addEdge(alarm, maryCalls);
+
     ve = new VariableElimination(bn);
     jpt = bn.getCPDs().stream()
         .map(cpd -> cpd.toDiscreteFactor())
         .reduce(new DiscreteFactor(), (a, b) -> a.product(b))
         .normalize(false);
+  }
+
+  @Test void testDiagnosticInference() {
+    Assertions.assertEquals(0.016, ve.query("B=1|J=1"), threshold);
+    Assertions.assertEquals(0.29, ve.query("B=1|J=1,M=1"), threshold);
+    Assertions.assertEquals(0.76, ve.query("A=1|J=1,M=1"), threshold);
+    Assertions.assertEquals(0.18, ve.query("E=1|J=1,M=1"), threshold);
+  }
+
+  @Test void testCausalInference() {
+    Assertions.assertEquals(0.86, ve.query("J=1|B=1"), threshold);
+    Assertions.assertEquals(0.67, ve.query("M=1|B=1"), threshold);
+  }
+
+  @Test void testInterCausalInference() {
+    Assertions.assertEquals(0.376, ve.query("B=1|A=1"), threshold);
+    Assertions.assertEquals(0.003, ve.query("B=1|A=1,E=1"), threshold);
+  }
+
+  @Test void testMixedInference() {
+    // Diagnostic and Causal
+    Assertions.assertEquals(0.03, ve.query("A=1|J=1,E=0"), threshold);
+    // Diagnostic and Intercausal
+    Assertions.assertEquals(0.017, ve.query("B=1|J=1,E=0"), threshold);
   }
 
   @Test void testQuery() {

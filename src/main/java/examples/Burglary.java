@@ -47,12 +47,6 @@ public class Burglary {
         }
     );
 
-    System.out.println(burglary.toString());
-    System.out.println(earthquake.toString());
-    System.out.println(alarm.toString());
-    System.out.println(johnCalls.toString());
-    System.out.println(maryCalls.toString());
-
     BayesianNetwork network = new BayesianNetwork();
     network.addEdge(burglary, alarm);
     network.addEdge(earthquake, alarm);
@@ -67,6 +61,9 @@ public class Burglary {
 
     BayesianNetwork model = BurglaryExample();
     Inference ve = new VariableElimination(model);
+
+    System.out.println("Diagnostic Inference");
+
     List<Pair<String, Integer>> qVars = Lists.newArrayList();
     List<Pair<String, Integer>> evidence = Lists.newArrayList();
 
