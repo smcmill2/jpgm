@@ -28,6 +28,18 @@ public class VariableElimination implements Inference {
     this.model = model;
   }
 
+  public void printQuery(String queryString) {
+    EventStream es = new EventStream(queryString);
+
+    System.out.println(String.format("P(%s): %f",
+        es.toString(), this.query(queryString)));
+  }
+
+  public void printQuery(String queryString, String annotation) {
+    System.out.println(annotation);
+    this.printQuery(queryString);
+  }
+
   public double query(List<Event> variables) {
     return query(variables, Lists.newArrayList());
   }

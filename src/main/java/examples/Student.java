@@ -2,18 +2,17 @@ package examples;
 
 import com.google.common.collect.Lists;
 import factors.discrete.ConditionalProbabilityDistribution;
-import factors.discrete.DiscreteFactor;
 import inference.Inference;
 import inference.exact.VariableElimination;
 import models.BayesianNetwork;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * A toy class to demonstrate the basic capabilities of inference using
- * discrete factors and a Bayesian network.
+ * A Toy class representing the Student Network from Probabilistic Graphical
+ * Models by Daphne Koller. The purpose is to provide a basic Bayesian Network
+ * on which to learn the inference capabilities of the library.
+ *
+ * All examples taken from:
+ * http://www.cedar.buffalo.edu/~srihari/CSE674/Chap3/3.4-Reasoning&D-Separation.pdf
  *
  * @version 1.0.0
  *
@@ -56,37 +55,32 @@ public class Student {
   public static void main(String[] args) {
     System.out.println("A toy class for demonstrating inference");
 
-    /*
     BayesianNetwork model = basicStudentBN();
-    Inference ve = new VariableElimination(model);
-    List<Pair<String, Integer>> qVars = Lists.newArrayList();
+    Inference inference = new VariableElimination(model);
 
-    System.out.println("Probability class is difficult:");
-    qVars = Lists.newArrayList(Pair.of("D", 1));
-    System.out.println(String.format("P(d=1): %f", ve.query(qVars)));
-    System.out.println("Probability student is intelligent:");
-    qVars = Lists.newArrayList(Pair.of("I", 1));
-    System.out.println(String.format("P(i=1): %f", ve.query(qVars)));
+    System.out.println("\nExamples of Causal Reasoning");
+    inference.printQuery("L=1", "Probability of getting a Letter");
+    inference.printQuery("L=1|I=0", "but our student isn't intelligent.");
+    inference.printQuery("L=1,|I=0,D=0", "and the class wasn't difficult.");
 
-    System.out.println("Student gets a C");
-    List<Pair<String, Integer>> evidence = Lists.newArrayList(Pair.of("G", 2));
+    System.out.println("\nExamples of Evidential Reasoning");
+    inference.printQuery("I=1", "A priori our student is intelligent.");
+    inference.printQuery("I=1|G=2", "but he received a C.");
+    inference.printQuery("D=1", "A priori the class is difficult.");
+    inference.printQuery("D=1|G=2", "Probability class is difficult increases.");
+    inference.printQuery("I=1|L=0", "Not sure of students grade, but know he received a letter.");
+    inference.printQuery("I=1|L=0,G=2", "After finding out the grade letter no longer matters.");
 
-    System.out.println("Probability class is difficult:");
-    qVars = Lists.newArrayList(Pair.of("D", 1));
-    System.out.println(String.format("P(d=1|g=2): %f", ve.query(qVars, evidence)));
-    System.out.println("Probability student is intelligent:");
-    qVars = Lists.newArrayList(Pair.of("I", 1));
-    System.out.println(String.format("P(i=1|g=2): %f", ve.query(qVars, evidence)));
+    System.out.println("\nExamples of Intercausal Reasoning");
+    inference.printQuery("I=1|G=2,S=1", "A high SAT score outweighs a bad grade");
+    inference.printQuery("I=1|G=2", "Recall the effect of a bad grade on intelligence.");
+    inference.printQuery("D=1|G=2,S=1", "It also means the class was probably difficult.");
+    inference.printQuery("D=1|G=2", "Recall the effect of a bad grade on course difficulty.");
 
-    System.out.println("Student Aced the SAT");
-    evidence.add(Pair.of("S", 1));
-
-    System.out.println("Probability class is difficult:");
-    qVars = Lists.newArrayList(Pair.of("D", 1));
-    System.out.println(String.format("P(d=1|g=2,s=1): %f", ve.query(qVars, evidence)));
-    System.out.println("Probability student is intelligent:");
-    qVars = Lists.newArrayList(Pair.of("I", 1));
-    System.out.println(String.format("P(i=1|g=2,s=1): %f", ve.query(qVars, evidence)));
-    */
+    System.out.println("\nExplaining Away");
+    inference.printQuery("I=1|G=2", "Recall the effect of a bad grade on intelligence.");
+    inference.printQuery("I=1|G=2,D=1", "Poor performance is partially explained by course difficulty.");
+    inference.printQuery("I=1|G=1", "Another example.");
+    inference.printQuery("I=1|G=1,D=1", "Again performance is partially explained by course difficult.");
   }
 }

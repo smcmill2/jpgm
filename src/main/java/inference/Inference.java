@@ -16,6 +16,8 @@ import java.util.List;
  */
 public interface Inference {
   double threshold = 10e-8;
+  void printQuery(String queryString);
+  void printQuery(String queryString, String annotation);
   double query(String queryString);
   double query(List<Event> variables);
   double query(List<Event> variables, List<Event> evidence);

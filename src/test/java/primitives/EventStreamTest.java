@@ -1,5 +1,6 @@
 package primitives;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,9 +40,15 @@ class EventStreamTest {
   }
 
   @Test void testToString() {
-    String result = eventStream.toString();
-
-    System.out.println(result);
     Assertions.assertTrue(eventStream.equals(es1.toString()));
+  }
+
+  @Test void testAddObservation() {
+    String newObservation = "k=2";
+    String updatedEventStream = Joiner.on(",").join(eventStream, newObservation);
+
+    es1.addObservation("k=2");
+
+    Assertions.assertTrue(updatedEventStream.equals(es1.toString()));
   }
 }

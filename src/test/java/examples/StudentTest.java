@@ -3,6 +3,7 @@ package examples;
 import com.google.common.collect.Lists;
 import factors.Factor;
 import factors.discrete.DiscreteFactor;
+import inference.Inference;
 import inference.exact.VariableElimination;
 import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,49 +16,45 @@ import java.util.List;
 import static util.TestUtils.JPTEqualsVE;
 
 /**
- * Created by smcmillan on 7/7/17.
+ * Tests for the Toy Student Network Example
  */
 class StudentTest {
-  static double threshold = 10e-8;
-
+  double threshold = 10e-4;
+  /**
+   * Test the Student Bayesian Network with the queries that will be run
+   * on it.
+   *
+   * http://www.cedar.buffalo.edu/~srihari/CSE674/Chap3/3.4-Reasoning&D-Separation.pdf
+   */
   @Test void testBasicStudentBN() {
     BayesianNetwork model = Student.basicStudentBN();
-    Factor jpt = model.getCPDs().stream()
-        .map(cpd -> cpd.toDiscreteFactor())
-        .reduce(new DiscreteFactor(), (a, b) -> a.product(b))
-        .normalize(false);
+    Inference inference = new VariableElimination(model);
 
-    VariableElimination ve = new VariableElimination(model);
+    Assertions.assertEquals(0.502, inference.query("L=1"), threshold);
+    Assertions.assertEquals(0.389, inference.query("L=1|I=0"), threshold);
+    Assertions.assertEquals(0.513, inference.query("L=1|I=0,D=0"), threshold);
 
-    // Intercausal Reasoning
-    /**
-     * Class is hard, student gets a C
-     *
-     */
+    Assertions.assertEquals(0.300, inference.query("I=1"), threshold);
+    Assertions.assertEquals(0.079, inference.query("I=1|G=2"), threshold);
+    Assertions.assertEquals(0.400, inference.query("D=1"), threshold);
+    Assertions.assertEquals(0.629, inference.query("D=1|G=2"), threshold);
+    Assertions.assertEquals(0.14, inference.query("I=1|L=0"), threshold);
+    Assertions.assertEquals(0.079, inference.query("I=1|G=2,L=0"), threshold);
 
-    EventStream query = new EventStream("I=1|D=1,G=1");
+    Assertions.assertEquals(0.578, inference.query("I=1|G=2,S=1"), threshold);
+    Assertions.assertEquals(0.629, inference.query("D=1|G=2"), threshold);
+    Assertions.assertEquals(0.76, inference.query("D=1|G=2,S=1"), threshold);
 
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
-        "P(I_1): 0.3 -> ~0.11, Actually getting 0.096");
-
-    /**
-     * Student Aces the SAT and gets a C
-     */
-    query = new EventStream("D=1|G=2");
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
-        "Class is difficult, P(D_1): 0.4 -> ~0.63");
-
-    query = new EventStream("I=1|S=1");
-    Assertions.assertTrue(JPTEqualsVE(jpt, ve, query.getEvents(), query.getObservations()),
-        "Student is intelligent, P(I_1): 0.3 -> ~0.58");
-
+    Assertions.assertEquals(0.11, inference.query("I=1|G=2,D=1"), threshold);
+    Assertions.assertEquals(0.175, inference.query("I=1|G=1"), threshold);
+    Assertions.assertEquals(0.34, inference.query("I=1|G=1,D=1"), threshold);
   }
 
+  /**
+   * Test whether main runs without error.
+   */
   @Test void testMain() {
     Student.main(new String[] { "args" });
-    Assertions.assertTrue(true,
-        "Student Toy Examples ran without issue.\n");
+    Assertions.assertTrue(true);
   }
 }
-
-//Generated with love by TestMe :) Please report issues and submit feature requests at: http://weirddev.com/forum#!/testme

@@ -6,6 +6,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,8 +20,8 @@ import java.util.stream.Collectors;
  * Created by smcmillan on 7/10/17.
  */
 public class EventStream {
-  List<Event> events = null;
-  List<Event> observations = null;
+  List<Event> events = new ArrayList<>();
+  List<Event> observations = new ArrayList<>();
 
   public EventStream(String eventStream) {
     List<List<Event>> eventsAndObservation = Splitter.on("|")
@@ -51,6 +52,14 @@ public class EventStream {
     return this.events.stream()
         .map(Event::asPair)
         .collect(Collectors.toList());
+  }
+
+  public void addObservation(String observation) {
+    this.addObservation(new Event(observation));
+  }
+
+  public void addObservation(Event event) {
+    this.observations.add(event);
   }
 
   public List<Event> getObservations() {
