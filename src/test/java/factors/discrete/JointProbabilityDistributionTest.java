@@ -3,12 +3,11 @@ package factors.discrete;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import factors.Factor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import primitives.EventStream;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -63,10 +62,9 @@ class JointProbabilityDistributionTest {
     double[] expectedValues = Arrays.stream(iReduction)
         .map(v -> v / iSum)
         .toArray();
-    List<Pair<String, Integer>> reduceList = new ArrayList<>();
-    reduceList.add(Pair.of("I", 1));
+    EventStream reudction = new EventStream("I=1");
 
-    Factor factor = jpd.reduce(reduceList, false);
+    Factor factor = jpd.reduce(reudction.getEvents(), false);
 
     // Check new factor is reduced version
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "D", "G"), factor.getScope()));
@@ -78,7 +76,7 @@ class JointProbabilityDistributionTest {
     Assertions.assertTrue(Iterables.elementsEqual(cardinality, jpd.getCardinality()));
     Assertions.assertArrayEquals(values, jpd.getValues(), threshold);
 
-    jpd.reduce(reduceList, true);
+    jpd.reduce(reudction.getEvents(), true);
 
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( "D", "G"), jpd.getScope()));
     Assertions.assertTrue(Iterables.elementsEqual(Lists.newArrayList( 2, 3), jpd.getCardinality()));

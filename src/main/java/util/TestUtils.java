@@ -5,6 +5,7 @@ import factors.Factor;
 import factors.discrete.DiscreteFactor;
 import inference.exact.VariableElimination;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 
 import java.util.List;
 
@@ -15,9 +16,10 @@ public class TestUtils {
   private static double threshold = 10e-8;
 
   public static boolean JPTEqualsVE(Factor jpt, VariableElimination ve,
-    List<Pair<String, Integer>> queryVars, List<Pair<String, Integer>> evidence) {
+    List<Event> queryVars, List<Event> evidence) {
     Factor table = ((DiscreteFactor)jpt).copy();
 
+    System.out.println(table);
     if(evidence.size() > 0) {
       table.reduce(evidence, true);
     }

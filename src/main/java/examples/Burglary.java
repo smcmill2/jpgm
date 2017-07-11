@@ -10,10 +10,19 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.List;
 
 /**
+ * Burglary Toy Example for demonstrating capabilities and inference.
+ *
+ * Examples taken from:
  * https://www.cs.utexas.edu/~mooney/cs343/slide-handouts/bayes-nets.pdf
- * Created by smcmillan on 7/7/17.
  */
 public class Burglary {
+  /**
+   * Create and return a Bayesian Network representing whether
+   * John or Mary calls given an alarm went off. Either a burglar or earthquake
+   * could possibly set off the alarm.
+   *
+   * @return a BayesianNetwork
+   */
   public static BayesianNetwork BurglaryExample() {
     ConditionalProbabilityDistribution burglary = new ConditionalProbabilityDistribution(
         "B", 2, new double[][]{{0.999}, {0.001}}
@@ -47,12 +56,6 @@ public class Burglary {
         }
     );
 
-    System.out.println(burglary.toString());
-    System.out.println(earthquake.toString());
-    System.out.println(alarm.toString());
-    System.out.println(johnCalls.toString());
-    System.out.println(maryCalls.toString());
-
     BayesianNetwork network = new BayesianNetwork();
     network.addEdge(burglary, alarm);
     network.addEdge(earthquake, alarm);
@@ -66,16 +69,28 @@ public class Burglary {
     System.out.println("A toy class for demonstrating inference");
 
     BayesianNetwork model = BurglaryExample();
-    Inference ve = new VariableElimination(model);
-    List<Pair<String, Integer>> qVars = Lists.newArrayList();
-    List<Pair<String, Integer>> evidence = Lists.newArrayList();
+    Inference inference = new VariableElimination(model);
 
-    System.out.println("Diagnostic Inference");
-    qVars = Lists.newArrayList(Pair.of("B", 1));
-    evidence = Lists.newArrayList(Pair.of("J", 1));
-    System.out.println(String.format("P(B=1|J=1): %f", ve.query(qVars, evidence)));
-    evidence.add(Pair.of("M", 1));
-    System.out.println(String.format("P(B=1|J=1,M=1): %f", ve.query(qVars, evidence)));
+    System.out.println("\nDiagnostic Inference");
+    inference.printQuery("B=1|J=1");
+    inference.printQuery("B=1|J=1,M=1");
+    inference.printQuery("A=1|J=1,M=1");
+    inference.printQuery("E=1|J=1,M=1");
 
+    System.out.println("\nCausal Inference");
+    // Slides say 0.86
+    inference.printQuery("J=1|B=1");
+    // Slides say 0.67
+    inference.printQuery("M=1|B=1");
+
+    System.out.println("\nIntercausal Inference");
+    // Slides say 0.376
+    inference.printQuery("B=1|A=1");
+    inference.printQuery("B=1|A=1,E=1");
+
+    // Diagnostic and Causal
+    System.out.println("\nMixed Inference");
+    inference.printQuery("A=1|J=1,E=0", "Diagnostic and Causal");
+    inference.printQuery("B=1|J=1,E=0", "Diagnostic and Intercausal");
   }
 }

@@ -13,6 +13,8 @@ import factors.discrete.DiscreteFactor;
 import inference.Inference;
 import models.BayesianNetwork;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
+import primitives.EventStream;
 import util.Misc;
 
 import javax.annotation.Nullable;
@@ -26,34 +28,49 @@ public class VariableElimination implements Inference {
     this.model = model;
   }
 
-  public double query(List<Pair<String, Integer>> variables) {
+  public void printQuery(String queryString) {
+    EventStream es = new EventStream(queryString);
+
+    System.out.println(String.format("P(%s): %f",
+        es.toString(), this.query(queryString)));
+  }
+
+  public void printQuery(String queryString, String annotation) {
+    System.out.println(annotation);
+    this.printQuery(queryString);
+  }
+
+  public double query(List<Event> variables) {
     return query(variables, Lists.newArrayList());
   }
 
-  @Override public double query(List<Pair<String, Integer>> variables,
-      List<Pair<String, Integer>> evidence) {
-    DiscreteFactor f = queryFactor(variables.stream()
-        .map(Pair::getLeft)
-        .collect(Collectors.toList()), evidence);
+  @Override public double query(String queryString) {
+    EventStream es = new EventStream(queryString);
+    return query(es.getEvents(), es.getObservations());
+  }
+
+  @Override public double query(List<Event> variables,
+      List<Event> evidence) {
+    DiscreteFactor f = queryFactor(variables, evidence);
 
     return variables.stream()
         .mapToDouble(v -> f.getValue(v))
         .reduce(1.0, (a, b) -> a * b);
   }
 
-  public DiscreteFactor queryFactor(List<String> variables) {
+  public DiscreteFactor queryFactor(List<Event> variables) {
     DiscreteFactor f = this.queryModel(this.model, variables, Lists.newArrayList());
     return f;
   }
 
-  public DiscreteFactor queryFactor(List<String> variables, List<Pair<String, Integer>> evidence) {
+  public DiscreteFactor queryFactor(List<Event> variables, List<Event> evidence) {
     DiscreteFactor f = this.queryModel(this.model, variables, evidence);
 
     return f;
   }
 
-  private DiscreteFactor queryModel(BayesianNetwork model, List<String> variables,
-      List<Pair<String, Integer>> evidence) {
+  private DiscreteFactor queryModel(BayesianNetwork model, List<Event> variables,
+      List<Event> evidence) {
     MutableGraph<String> graph = Graphs.copyOf(model.getMoralStructure());
     List<String> eliminationOrder = EliminationOrdering.getOrdering(
         ImmutableGraph.copyOf(graph),
@@ -70,10 +87,12 @@ public class VariableElimination implements Inference {
       factorMap.put(f.factorString(), f);
     }
 
-    Set<String> notX = Sets.newHashSet(variables);
+    Set<String> notX = Sets.newHashSet(variables.stream()
+      .map(Event::getVariable)
+    .collect(Collectors.toList()));
     if(evidence != null) {
       notX = Sets.union(notX, Sets.newHashSet(evidence.stream()
-          .map(e -> e.getLeft())
+          .map(Event::getVariable)
           .collect(Collectors.toList())
       ));
     }
@@ -81,15 +100,15 @@ public class VariableElimination implements Inference {
     eliminationOrder.removeAll(notX);  // Factor into order creation
 
     // Instantiate Observed Evidence
-    for(Pair<String, Integer> e : evidence) {
-      Set<String> observed = factors.get(e.getLeft());
+    for(Event e: evidence) {
+      Set<String> observed = factors.get(e.getVariable());
 
       for(String o : observed) {
         Factor f = factorMap.get(o);
         Factor reducedFactor = f.reduce(Lists.newArrayList(e), false);
 
         factors = HashMultimap.create(Multimaps.filterEntries(factors,
-          entry -> !(entry.getKey().equals(e.getLeft()) || entry.getValue().equals(o))));
+          entry -> !(entry.getKey().equals(e.getVariable()) || entry.getValue().equals(o))));
 
         for(String v : reducedFactor.getScope()) {
           factors.put(v, reducedFactor.factorString());
@@ -140,12 +159,12 @@ public class VariableElimination implements Inference {
         .normalize(false);
   }
 
-  @Override public String mapQuery(List<String> variables) {
+  @Override public String mapQuery(List<Event> variables) {
     return null;
   }
 
-  @Override public String mapQuery(List<String> variables,
-      List<Pair<String, Integer>> evidence) {
+  @Override public String mapQuery(List<Event> variables,
+      List<Event> evidence) {
     return null;
   }
 }

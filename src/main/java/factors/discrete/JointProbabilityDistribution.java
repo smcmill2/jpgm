@@ -3,6 +3,7 @@ package factors.discrete;
 import com.google.common.primitives.Doubles;
 import factors.Factor;
 import org.apache.commons.lang3.tuple.Pair;
+import primitives.Event;
 import util.ListOps;
 
 import java.util.Arrays;
@@ -41,7 +42,7 @@ public class JointProbabilityDistribution extends DiscreteFactor {
     return Arrays.copyOf(this.values, this.values.length);
   }
 
-  @Override public Factor reduce(List<Pair<String, Integer>> variables,
+  @Override public Factor reduce(List<Event> variables,
       boolean inPlace) {
     Factor factor = super.reduce(variables, inPlace);
 
